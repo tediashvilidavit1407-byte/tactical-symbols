@@ -1,0 +1,6 @@
+﻿type,key,ka,en,stems,description,icon_or_graphic,source,page,status,notes
+branch,inf,ქვეითი,Infantry,ქვეით; infantry; მსროლელ,X — ჯვარედინი ხაზები ჩარჩოს კუთხეებიდან,inf,APP-6,,verified,მაგალითი — არსებული ჩანაწერი
+echelon,platoon,ოცეული,Platoon,ოცეულ; platoon,••• — სამი წერტილი,,APP-6,,verified,მაგალითი
+task,block,ბლოკირება,Block,ბლოკირ; ჩაკეტ; block,მოწინააღმდეგეს ეკრძალება არეალში შესვლა ან წინსვლა,block,FM 3-90,,verified,მაგალითი
+synonym,armor,,,ჯავშნიან,,,,,new,არსებულ ჩანაწერს ემატება ახალი ფუძე
+branch,,,,,,,,,new,ახალი ჩანაწერი — შეავსეთ

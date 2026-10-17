@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ტაქტიკური ნიშნების გენერატორი</title>
+<meta name="theme-color" content="#3F5E2A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<!-- შრიფტები იტვირთება ინტერნეტიდან; ოფლაინ რეჟიმში გამოიყენება სისტემური შრიფტი -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;600;700&family=Noto+Serif+Georgian:wght@700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: briefing board — map-grid header band, input strip, symbol on light "map" card beside a component breakdown */
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#E9ECE6; --panel:#F7F8F5; --ink:#1B221E; --muted:#59645D; --line:#C6CDC4;
+  --accent:#3F5E2A; --accent-ink:#FFFFFF; --accent-soft:#DCE6D1;
+  --warn:#7A4F00; --warn-bg:#FBEFD5; --bad:#9B2C2C; --bad-bg:#F8E1E1; --ok:#2F6B3A; --ok-bg:#E1F0E2;
+  --map:#F3F5F0; --mapgrid:#DDE3D8;
+  --f-display:"Noto Serif Georgian", Georgia, serif;
+  --f-body:"Noto Sans Georgian", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121714; --panel:#1B211D; --ink:#E4E9E3; --muted:#95A199; --line:#2F3832;
+  --accent:#9DBB63; --accent-ink:#13180F; --accent-soft:#26301F;
+  --warn:#E8B85A; --warn-bg:#33291A; --bad:#F09A9A; --bad-bg:#3A2020; --ok:#8FD19B; --ok-bg:#1D3322;
+  --map:#EEF1EA; --mapgrid:#D3DACD; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#121714; --panel:#1B211D; --ink:#E4E9E3; --muted:#95A199; --line:#2F3832;
+  --accent:#9DBB63; --accent-ink:#13180F; --accent-soft:#26301F;
+  --warn:#E8B85A; --warn-bg:#33291A; --bad:#F09A9A; --bad-bg:#3A2020; --ok:#8FD19B; --ok-bg:#1D3322;
+  --map:#EEF1EA; --mapgrid:#D3DACD; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+header{border-bottom:1px solid var(--line);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:48px 48px;background-position:-1px -1px}
+header .wrap{padding-block:28px 22px;display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;justify-content:space-between}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);background:var(--bg);display:inline-block;padding:0 4px}
+h1{font-family:var(--f-display);font-size:clamp(24px,4vw,34px);line-height:1.25;margin:4px 0 0;text-wrap:balance;background:var(--bg);display:inline-block;padding:0 4px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px}
+.tabs button{font:600 14px var(--f-body);border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:5px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.tabs button:focus-visible,button:focus-visible,textarea:focus-visible,.chip:focus-visible,.cat:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main .wrap{padding-block:24px 40px;display:grid;gap:22px}
+.input-row{display:grid;grid-template-columns:1fr auto;gap:10px}
+textarea{width:100%;min-height:58px;resize:vertical;font:16px/1.5 var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.btn{font:600 15px var(--f-body);background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:0 22px;cursor:pointer;min-height:48px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:13px var(--f-body);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.label{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:0 0 6px}
+.result{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:760px){.result{grid-template-columns:1fr}.input-row{grid-template-columns:1fr}}
+.boards{display:grid;gap:12px}
+.board{background:var(--map);border:1px solid var(--line);border-radius:6px;padding:14px;
+  background-image:linear-gradient(var(--mapgrid) 1px,transparent 1px),linear-gradient(90deg,var(--mapgrid) 1px,transparent 1px);background-size:24px 24px}
+.board svg{display:block;width:100%;height:auto;max-height:300px}
+.board .cap{font:600 13px var(--f-body);color:#1B221E;margin-top:6px;text-align:center}
+.side{display:grid;gap:16px;min-width:0}
+.side h2{font-family:var(--f-display);font-size:21px;margin:0;line-height:1.3;text-wrap:balance}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font:500 11px var(--f-mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+td.k{font-weight:600;white-space:nowrap}
+td code,.mono{font-family:var(--f-mono);font-size:12px}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.note{border-radius:6px;padding:9px 12px;font-size:14px}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+.note.bad{background:var(--bad-bg);color:var(--bad)}
+.note.ok{background:var(--ok-bg);color:var(--ok)}
+.def{max-width:65ch;margin:0}
+.tag{font:500 11px var(--f-mono);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--muted);white-space:nowrap}
+.tag.v{border-color:var(--warn);color:var(--warn)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.copybox{width:100%;font:12px var(--f-mono);min-height:90px}
+.empty{color:var(--muted)}
+section[hidden]{display:none}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.cat{background:var(--map);border:1px solid var(--line);border-radius:6px;padding:8px;cursor:pointer;text-align:center;font:inherit;color:#1B221E}
+.cat:hover{border-color:var(--accent)}
+.cat svg{width:100%;height:auto;display:block}
+.cat span{display:block;font-size:12.5px;line-height:1.35;margin-top:4px}
+.cathead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:8px 0 10px}
+.cathead h3{font-family:var(--f-display);font-size:19px;margin:0}
+.cathead p{margin:0;color:var(--muted);font-size:13.5px}
+.score{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fb li{margin:2px 0}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+footer .wrap{padding-block:18px 28px;display:grid;gap:6px}
+footer p{margin:0;max-width:80ch}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div>
+    <span class="eyebrow">APP-6 · MIL-STD-2525 · ADP 1-02 · FM 3-90</span><br>
+    <h1>ტაქტიკური ნიშნების გენერატორი</h1>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-gen" aria-selected="true" data-t="gen">გენერატორი</button>
+    <button role="tab" id="tab-cat" aria-selected="false" data-t="cat">კატალოგი</button>
+    <button role="tab" id="tab-quiz" aria-selected="false" data-t="quiz">ვარჯიში</button>
+  </div>
+</div></header>
+
+<main><div class="wrap">
+
+<section id="sec-gen">
+  <p class="label">წერილობითი განმარტება</p>
+  <div class="input-row">
+    <textarea id="q" placeholder="მაგ.: მოწინააღმდეგის მექანიზებული ქვეითი ბატალიონი">მეგობრული მექანიზებული ქვეითი ასეული</textarea>
+    <button class="btn" id="go">გამოსახვა</button>
+  </div>
+  <p class="hint">ჩაწერეთ: <b>აფილაცია</b> + <b>დარგი</b> + <b>ეშელონი</b> (+ შტაბი / სადესანტო), ან <b>ტაქტიკური ამოცანა</b>. შეიძლება ორივე ერთად. მიიღება ქართული და ინგლისური ტერმინები. Enter — გამოსახვა.</p>
+  <div class="chips" id="examples" style="margin-top:10px"></div>
+  <div id="out" style="margin-top:22px"></div>
+</section>
+
+<section id="sec-cat" hidden>
+  <div id="catalog"></div>
+</section>
+
+<section id="sec-quiz" hidden>
+  <div class="result">
+    <div class="boards"><div class="board" id="qboard"></div></div>
+    <div class="side">
+      <div class="actions" style="justify-content:space-between;align-items:center">
+        <h2>რას აღნიშნავს ეს ნიშანი?</h2><span class="score" id="qscore">0 / 0</span>
+      </div>
+      <p class="def empty">ჩაწერეთ სრული განმარტება: აფილაცია, დარგი და ეშელონი — ან ამოცანის დასახელება.</p>
+      <textarea id="qa" placeholder="მაგ.: მოწინააღმდეგის სადაზვერვო ოცეული"></textarea>
+      <div class="actions"><button class="btn" id="qcheck">შემოწმება</button><button class="btn ghost" id="qnext">შემდეგი ნიშანი</button></div>
+      <div id="qfb"></div>
+    </div>
+  </div>
+</section>
+
+</div></main>
+
+<footer><div class="wrap">
+  <p><b>საფუძველი:</b> NATO APP-6 (Joint Military Symbology); MIL-STD-2525; აშშ-ის ADP 1-02 (Terms and Military Symbols); FM 3-90 (Tactics) — ამოცანების განმარტებები პერიფრაზირებულია.</p>
+  <p><b>დაშვება:</b> საქართველოს თავდაცვის ძალები იყენებს NATO-თავსებად (APP-6) სიმბოლიკას; ქართული ტერმინები აქ გამოყენებულია სამუშაო ვარიანტად და შეიძლება განსხვავდებოდეს ეროვნული სახელმძღვანელოს ზუსტი ფორმულირებისგან.</p>
+  <p><b>შეზღუდვა:</b> გრაფიკები სქემატურია, სასწავლო დანიშნულებით. ნიშნით „გადაამოწმეთ“ აღნიშნული ამოცანების გრაფიკის ზუსტი ფორმა შეადარეთ ADP 1-02-ის მოქმედ რედაქციას.</p>
+</div></footer>
+<script src="symbols-data.js"></script>
+<script src="app.js"></script>
+<script>
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>
