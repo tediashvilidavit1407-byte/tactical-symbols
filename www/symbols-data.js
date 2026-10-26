@@ -1,134 +1,374 @@
-/* ტაქტიკური ნიშნების მონაცემები: აფილაცია, ჩარჩოები, ხატულები, დარგები, ეშელონები, ამოცანები.
+/* ტაქტიკური ნიშნების მონაცემები.
+   წყაროები:
+   - NATO APP-6 / MIL-STD-2525 / ADP 1-02 (ძირითადი ჩარჩოები და ხატულები);
+   - საწყისი სამეთაურო მომზადების სერჟანტთა საკანდიდატო კურსის სასწავლო მასალა — ქართული ტერმინები, განმარტებები, ეშელონები, სპეციალური ნიშნები
+     და ტაქტიკური დავალებების გრაფიკა (www/tasks/*.png).
    ახალი ნიშნის ან ტერმინის დასამატებლად შეცვალეთ მხოლოდ ეს ფაილი.
-   stems — სიტყვის ფუძეები, რომლითაც განმარტება ამოიცნობა. */
-/* ===================== DATA ===================== */
+   stems — სიტყვის ფუძეები, რომლითაც წერილობითი განმარტება ამოიცნობა (გრძელი ფუძე მოწმდება პირველი).
+   src — წყარო: 'kursi' = კურსის მასალა, 'app6' = NATO / აშშ დოქტრინა. */
+
+const SRC={kursi:'სერჟანტთა კურსის სასწავლო მასალა',app6:'APP-6 / ADP 1-02'};
+
+/* ---------- აფილაცია (ვინაობა) ---------- */
 const AFF={
- F:{ka:'მეგობრული',word:'მეგობრული',frame:'მართკუთხედი',color:'ცისფერი (Crystal Blue #80E0FF)',fill:'#80E0FF',
-    stems:['მეგობრ','საკუთარ','მოკავშირ','friendly','friend']},
- H:{ka:'მოწინააღმდეგე',word:'მოწინააღმდეგის',frame:'რომბი',color:'წითელი (Red #FF8080)',fill:'#FF8080',
-    stems:['მოწინააღმდეგ','მტრის','მტრულ','მტერ','hostile','enemy']},
- N:{ka:'ნეიტრალური',word:'ნეიტრალური',frame:'კვადრატი',color:'მწვანე (Bamboo Green #AAFFAA)',fill:'#AAFFAA',
+ F:{ka:'საკუთარი (მეგობრული)',word:'საკუთარი',frame:'მართკუთხედი',color:'ლურჯი',fill:'#80E0FF',line:'#1D3FBF',
+    stems:['მეგობრ','საკუთარ','მოკავშირ','friendly','friend','own']},
+ H:{ka:'მოწინააღმდეგე',word:'მოწინააღმდეგის',frame:'რომბი',color:'წითელი',fill:'#FF8080',line:'#D0141E',
+    stems:['მოწინააღმდეგ','მოწ ','მტრის','მტრულ','მტერ','hostile','enemy']},
+ N:{ka:'ნეიტრალური',word:'ნეიტრალური',frame:'კვადრატი',color:'მწვანე',fill:'#AAFFAA',line:'#1E8A3A',
     stems:['ნეიტრალ','neutral']},
- U:{ka:'უცნობი',word:'უცნობი',frame:'ოთხფურცლა (quatrefoil)',color:'ყვითელი (Light Yellow #FFFF80)',fill:'#FFFF80',
-    stems:['უცნობ','unknown']}
+ U:{ka:'უცნობი / დაუდგენელი',word:'უცნობი',frame:'ოთხფურცლა (ყვავილი)',color:'ყვითელი',fill:'#FFFF80',line:'#A88C00',
+    stems:['უცნობ','დაუდგენელ','unknown']}
 };
+
+/* ---------- ჩარჩოები (viewBox 0 -36 200 256) ---------- */
 const FR={
- F:{shape:'<rect x="25" y="50" width="150" height="100"/>',b:{x:25,y:50,w:150,h:100},top:50,hq:[25,150],s:1},
- H:{shape:'<path d="M100,15 L185,100 L100,185 L15,100 Z"/>',b:{x:57.5,y:57.5,w:85,h:85},top:15,hq:[15,100],s:.8},
- N:{shape:'<rect x="45" y="45" width="110" height="110"/>',b:{x:45,y:45,w:110,h:110},top:45,hq:[45,155],s:.85},
- U:{shape:'<path d="M65,135 C15,135 15,65 65,65 C65,15 135,15 135,65 C185,65 185,135 135,135 C135,185 65,185 65,135 Z"/>',b:{x:65,y:65,w:70,h:70},top:28,hq:[28,100],s:.78}
+ F:{shape:'<rect x="25" y="50" width="150" height="100"/>',b:{x:25,y:50,w:150,h:100},top:50,bot:150,l:25,r:175,hq:[25,150],s:1},
+ H:{shape:'<path d="M100,15 L185,100 L100,185 L15,100 Z"/>',b:{x:57.5,y:57.5,w:85,h:85},top:15,bot:185,l:15,r:185,hq:[15,100],s:.8},
+ N:{shape:'<rect x="45" y="45" width="110" height="110"/>',b:{x:45,y:45,w:110,h:110},top:45,bot:155,l:45,r:155,hq:[45,155],s:.85},
+ U:{shape:'<path d="M65,135 C15,135 15,65 65,65 C65,15 135,15 135,65 C185,65 185,135 135,135 C135,185 65,185 65,135 Z"/>',b:{x:65,y:65,w:70,h:70},top:28,bot:172,l:28,r:172,hq:[28,100],s:.78}
 };
 const cx=100,cy=100;
+const GEO='Noto Sans Georgian, Arial, sans-serif';
+function txt(t,s,dy,fs){return `<text x="${cx}" y="${cy+(dy||12)*s}" text-anchor="middle" font-family="${GEO}" font-weight="700" font-size="${(fs||34)*s}" fill="currentColor" stroke="none">${t}</text>`}
+
+/* ---------- ხატულები ჩარჩოს შიგნით (b = შიდა არე, s = მასშტაბი) ---------- */
 const ICON={
  inf:(b)=>`<path d="M${b.x},${b.y} L${b.x+b.w},${b.y+b.h} M${b.x+b.w},${b.y} L${b.x},${b.y+b.h}"/>`,
  recon:(b)=>`<path d="M${b.x},${b.y+b.h} L${b.x+b.w},${b.y}"/>`,
+ mot:()=>`<path d="M${cx},-20 V220"/>`,
  armor:(b,s)=>`<ellipse cx="${cx}" cy="${cy}" rx="${50*s}" ry="${25*s}"/>`,
- art:(b,s)=>`<circle cx="${cx}" cy="${cy}" r="${13*s}" fill="#000"/>`,
+ art:(b,s)=>`<circle cx="${cx}" cy="${cy}" r="${13*s}" fill="currentColor"/>`,
+ mlrs:(b,s)=>`<circle cx="${cx}" cy="${cy+20*s}" r="${10*s}" fill="currentColor"/><path d="M${cx-18*s},${cy+2*s} L${cx},${cy-14*s} L${cx+18*s},${cy+2*s} M${cx-18*s},${cy-12*s} L${cx},${cy-28*s} L${cx+18*s},${cy-12*s}"/>`,
  eng:(b,s)=>{const w=34*s,h=22*s;return `<path d="M${cx-w},${cy+h/2} V${cy-h/2} H${cx+w} V${cy+h/2} M${cx},${cy-h/2} V${cy+h/4}"/>`},
  med:()=>`<path d="M${cx},-20 V220 M-20,${cy} H220"/>`,
  sig:(b,s)=>`<path d="M${b.x},${b.y} L${cx-5*s},${cy+20*s} L${cx+5*s},${cy-20*s} L${b.x+b.w},${b.y+b.h}"/>`,
  ad:(b,s)=>`<path d="M${cx-48*s},${b.y+b.h} A${48*s} ${30*s} 0 0 1 ${cx+48*s},${b.y+b.h}"/>`,
+ amd:(b,s)=>`<path d="M${cx-48*s},${b.y+b.h} A${48*s} ${34*s} 0 0 1 ${cx+48*s},${b.y+b.h}"/><path d="M${cx-9*s},${b.y+b.h-2} V${cy-6*s} A${9*s} ${11*s} 0 0 1 ${cx+9*s},${cy-6*s} V${b.y+b.h-2}"/>`,
  at:(b)=>`<path d="M${b.x},${b.y+b.h} L${cx},${b.y} L${b.x+b.w},${b.y+b.h}"/>`,
+ atgm:(b,s)=>`<path d="M${b.x},${b.y+b.h} L${cx},${b.y} L${b.x+b.w},${b.y+b.h}"/><path d="M${cx-15*s},${cy+22*s} L${cx},${cy+8*s} L${cx+15*s},${cy+22*s} M${cx-15*s},${cy+34*s} L${cx},${cy+20*s} L${cx+15*s},${cy+34*s}"/>`,
  mor:(b,s)=>`<circle cx="${cx}" cy="${cy+18*s}" r="${7*s}"/><path d="M${cx},${cy+11*s} V${cy-26*s} M${cx-8*s},${cy-15*s} L${cx},${cy-27*s} L${cx+8*s},${cy-15*s}"/>`,
- sup:(b)=>`<path d="M-20,${b.y+b.h*.75} H220"/>`,
- mnt:(b,s)=>`<path d="M${cx-28*s},${cy} H${cx+28*s} M${cx-40*s},${cy-12*s} A${12*s} ${12*s} 0 0 1 ${cx-40*s},${cy+12*s} M${cx+40*s},${cy-12*s} A${12*s} ${12*s} 0 0 0 ${cx+40*s},${cy+12*s}"/>`,
+ mtn:(b,s)=>`<path d="M${cx-22*s},${b.y+b.h} Q${cx},${b.y+b.h-30*s} ${cx+22*s},${b.y+b.h} Z" fill="currentColor"/>`,
+ uav:(b,s)=>`<path d="M${cx-40*s},${cy-18*s} L${cx},${cy+12*s} L${cx+40*s},${cy-18*s} L${cx},${cy-2*s} Z"/>`,
  rw:(b,s)=>`<path d="M${cx-40*s},${cy-20*s} L${cx+40*s},${cy+20*s} L${cx+40*s},${cy-20*s} L${cx-40*s},${cy+20*s} Z"/>`,
- mp:(b,s)=>txt('MP',s), sf:(b,s)=>txt('SF',s),
- abn:(b,s)=>{const y=b.y+b.h-10*s;return `<path d="M${cx-24*s},${y} Q${cx-12*s},${y-14*s} ${cx},${y} Q${cx+12*s},${y-14*s} ${cx+24*s},${y}"/>`}
+ navy:(b,s)=>`<path d="M${cx},${cy-22*s} V${cy+20*s} M${cx-12*s},${cy-12*s} H${cx+12*s} M${cx-22*s},${cy+4*s} Q${cx-20*s},${cy+22*s} ${cx},${cy+20*s} Q${cx+20*s},${cy+22*s} ${cx+22*s},${cy+4*s}"/>`,
+ airf:(b,s)=>`<ellipse cx="${cx-17*s}" cy="${cy}" rx="${17*s}" ry="${9*s}"/><ellipse cx="${cx+17*s}" cy="${cy}" rx="${17*s}" ry="${9*s}"/>`,
+ mp:(b,s)=>txt('ს.პ',s,12,30),
+ sf:(b,s)=>txt('SF',s),
+ hq_txt:(b,s)=>txt('შტ',s,12,30),
+ sup:(b)=>`<path d="M-20,${b.y+b.h*.78} H220"/>`,
+ mnt:(b,s)=>`<path d="M${cx-28*s},${cy} H${cx+28*s} M${cx-40*s},${cy-12*s} A${12*s} ${12*s} 0 0 1 ${cx-40*s},${cy+12*s} M${cx+40*s},${cy-12*s} A${12*s} ${12*s} 0 0 0 ${cx+40*s},${cy+12*s}"/>`,
+ abn:(b,s)=>{const y=b.y+b.h-10*s;return `<path d="M${cx-24*s},${y} Q${cx-12*s},${y-14*s} ${cx},${y} Q${cx+12*s},${y-14*s} ${cx+24*s},${y}"/>`},
+ /* მომარაგების კლასები (ზურგის ხაზის ზემოთ) */
+ c1:(b,s)=>{const y=cy-8*s;return `<path d="M${cx+6*s},${y-20*s} A${20*s} ${20*s} 0 1 0 ${cx+6*s},${y+20*s} A${15*s} ${16*s} 0 1 1 ${cx+6*s},${y-20*s} Z"/>`},
+ c2:(b,s)=>{const y=cy-8*s;return `<path d="M${cx-30*s},${y-11*s} V${y+11*s} M${cx-30*s},${y} H${cx+4*s} M${cx-14*s},${y-11*s} V${y+11*s}"/><ellipse cx="${cx+18*s}" cy="${y}" rx="${8*s}" ry="${14*s}"/>`},
+ c3:(b,s)=>{const y=cy-8*s;return `<path d="M${cx-24*s},${y-16*s} H${cx+24*s} L${cx},${y+6*s} Z M${cx},${y+6*s} V${y+18*s}"/>`},
+ c4:(b,s)=>{const y=cy-6*s,w=28*s,h=16*s;return `<path d="M${cx-w},${y+h/2} V${y-h/2} H${cx+w} V${y+h/2} M${cx},${y-h/2} V${y+h/4}"/>`},
+ c5:(b,s)=>{const y=cy-8*s;return `<path d="M${cx-11*s},${y+16*s} V${y-4*s} A${11*s} ${12*s} 0 0 1 ${cx+11*s},${y-4*s} V${y+16*s} M${cx-18*s},${y+16*s} H${cx+18*s}"/>`},
+ c6:(b,s)=>{const y=cy-8*s;return `<circle cx="${cx}" cy="${y-14*s}" r="${6*s}"/><path d="M${cx},${y-8*s} V${y+8*s} M${cx-14*s},${y-2*s} H${cx+14*s} M${cx-10*s},${y+20*s} L${cx},${y+8*s} L${cx+10*s},${y+20*s}"/>`},
+ c7:(b,s)=>{const y=cy-4*s;return `<circle cx="${cx-24*s}" cy="${y}" r="${7*s}" fill="currentColor"/><circle cx="${cx+24*s}" cy="${y}" r="${7*s}" fill="currentColor"/><path d="M${cx-24*s},${y} Q${cx},${y-22*s} ${cx+24*s},${y}"/>`},
+ c8:(b,s)=>`<path d="M${cx},${b.y} V${b.y+b.h*.78} M-20,${b.y+b.h*.39} H220"/>`,
+ c9:(b,s)=>{const y=cy-8*s,r=10*s;let p='';for(let i=0;i<8;i++){const a=i*Math.PI/4;p+=`M${(cx+r*Math.cos(a)).toFixed(1)},${(y+r*Math.sin(a)).toFixed(1)} L${(cx+(r+8*s)*Math.cos(a)).toFixed(1)},${(y+(r+8*s)*Math.sin(a)).toFixed(1)} `}return `<circle cx="${cx}" cy="${y}" r="${r}"/><path d="${p}"/>`},
+ c10:(b,s)=>txt('CA',s,0,28)
 };
-function txt(t,s){return `<text x="${cx}" y="${cy+12*s}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="${34*s}" fill="#000" stroke="none">${t}</text>`}
 
+/* ---------- სახეობა და გვარეობა (ძირითადი ხატულა) ---------- */
+const GRP={svc:'სახეობა',man:'მანევრი',fire:'ცეცხლი და საჰაერო თავდაცვა',sup:'საბრძოლო უზრუნველყოფა',sus:'ზურგი და მომსახურება',mod:'მოდიფიკატორი'};
 const BR={
- inf:{ka:'ქვეითი',icons:['inf'],desc:'X — ჯვარედინი ხაზები ჩარჩოს კუთხეებიდან',grp:'man',stems:['ქვეით','infantry']},
- mech:{ka:'მექანიზებული ქვეითი',icons:['inf','armor'],desc:'X + ოვალი (მუხლუხა): ქვეითი ჯავშანტექნიკაზე',grp:'man',stems:['მექანიზებული ქვეით','მექანიზ','mechanized infantry','mechanized']},
- armor:{ka:'ჯავშანსატანკო',icons:['armor'],desc:'ოვალი — მუხლუხას სტილიზებული ხედი',grp:'man',stems:['ჯავშანსატანკ','ჯავშანტექნიკ','სატანკ','ტანკ','armored','armoured','armor','armour','tank']},
- recon:{ka:'სადაზვერვო',icons:['recon'],desc:'დიაგონალი — ქვედა მარცხენა კუთხიდან ზედა მარჯვენამდე',grp:'man',stems:['სადაზვერვ','დაზვერვ','მზვერავ','reconnaissance','recon','scout','cavalry','კავალერ']},
- art:{ka:'საარტილერიო',icons:['art'],desc:'შევსებული წრე ცენტრში — საველე არტილერია',grp:'fire',stems:['საარტილერი','არტილერი','artillery']},
- mor:{ka:'ნაღმმტყორცნების',icons:['mor'],desc:'პატარა წრე და ისარი ზემოთ',grp:'fire',stems:['ნაღმმტყორცნ','ნაღმსატყორც','mortar']},
- at:{ka:'ტანკსაწინააღმდეგო',icons:['at'],desc:'შებრუნებული V — ქვედა კუთხეებიდან ზედა შუა წერტილამდე',grp:'fire',stems:['ტანკსაწინააღმდეგ','anti tank','antitank','anti armor','anti armour']},
- ad:{ka:'საჰაერო თავდაცვის',icons:['ad'],desc:'გუმბათისებრი რკალი ჩარჩოს ქვედა ნაწილში',grp:'fire',stems:['საჰაერო თავდაცვ','საზენიტ','air defense','air defence']},
- eng:{ka:'საინჟინრო',icons:['eng'],desc:'„ხიდი“ — ჰორიზონტალი სამი ფეხით (შუა მოკლე)',grp:'sup',stems:['საინჟინრ','ინჟინ','მესანგრ','engineer','sapper']},
- sig:{ka:'კავშირგაბმულობის',icons:['sig'],desc:'ელვა — ზიგზაგი კუთხიდან კუთხემდე',grp:'sup',stems:['კავშირგაბმ','signal','communications']},
- mp:{ka:'სამხედრო პოლიციის',icons:['mp'],desc:'წარწერა „MP“',grp:'sup',stems:['სამხედრო პოლიც','military police','mp']},
- rw:{ka:'საავიაციო (ვერტმფრენი)',icons:['rw'],desc:'„პეპელა-ჰალსტუხი“ — ვერტმფრენის ხრახნი',grp:'sup',stems:['ვერტმფრ','შვეულმფრ','ავიაცი','rotary wing','helicopter','aviation']},
- sf:{ka:'სპეცდანიშნულების',icons:['sf'],desc:'წარწერა „SF“',grp:'sup',stems:['სპეცდანიშნულ','სპეცოპერაც','სპეცრაზმ','special forces','sf']},
- med:{ka:'სამედიცინო',icons:['med'],desc:'ჯვარი მთელ ჩარჩოზე',grp:'sus',stems:['სამედიცინ','სანიტარ','medical']},
- sup:{ka:'მომარაგების',icons:['sup'],desc:'ჰორიზონტალი ჩარჩოს ქვედა მესამედში',grp:'sus',stems:['მომარაგ','ლოჯისტ','supply','logistics','logistic']},
- mnt:{ka:'ტექმომსახურების',icons:['mnt'],desc:'„ქანჩის გასაღები“ — ხაზი ორი რკალით',grp:'sus',stems:['ტექმომსახურ','სარემონტ','შეკეთ','maintenance']},
- sp:{ka:'თვითმავალი / მუხლუხა',icons:['armor'],desc:'ოვალი ემატება ძირითად ხატულას (მოდიფიკატორი)',grp:'mod',stems:['თვითმავალ','მუხლუხ','self propelled','tracked']}
+ land:{ka:'სახმელეთო ძალები',icons:[],desc:'ცარიელი ჩარჩო — ჩარჩოს შიდა ნაწილი უთითებს ქვედანაყოფის ტიპს',grp:'svc',src:'kursi',stems:['სახმელეთო ძალ','land force']},
+ navy:{ka:'საზღვაო ძალები',icons:['navy'],desc:'ღუზა',grp:'svc',src:'kursi',stems:['საზღვაო','navy','naval']},
+ airf:{ka:'საჰაერო ძალები',icons:['airf'],desc:'ორი ოვალი (უსასრულობის ნიშანი)',grp:'svc',src:'kursi',stems:['საჰაერო ძალ','air force']},
+ mp:{ka:'სამხედრო პოლიცია',icons:['mp'],desc:'წარწერა „ს.პ“ (NATO-ში — „MP“)',grp:'svc',src:'kursi',stems:['სამხედრო პოლიც','military police']},
+ inf:{ka:'ქვეითი (მსუბუქი ქვეითი)',icons:['inf'],desc:'X — ჯვარედინი ხაზები ჩარჩოს კუთხეებიდან',grp:'man',src:'kursi',stems:['მსუბუქი ქვეით','ქვეით','infantry']},
+ mech:{ka:'მექანიზებული ქვეითი',icons:['inf','armor'],desc:'X + ოვალი (მუხლუხა): ქვეითი ჯავშანტექნიკაზე',grp:'man',src:'kursi',stems:['მექანიზებული ქვეით','მექანიზირებული ქვეით','მექანიზ','mechanized infantry','mechanized']},
+ armor:{ka:'ჯავშანსატანკო',icons:['armor'],desc:'ოვალი — მუხლუხას სტილიზებული ხედი',grp:'man',src:'kursi',stems:['ჯავშანსატანკ','ჯავშანტექნიკ','სატანკ','ტანკ','armored','armoured','armor','armour','tank']},
+ recon:{ka:'სადაზვერვო',icons:['recon'],desc:'დიაგონალი — ქვედა მარცხენა კუთხიდან ზედა მარჯვენამდე',grp:'man',src:'kursi',stems:['სადაზვერვ','დაზვერვ','მზვერავ','reconnaissance','recon','scout','cavalry','კავალერ']},
+ mot:{ka:'მოტორიზებული',icons:['mot'],desc:'ვერტიკალური ხაზი ჩარჩოს შუაში (ემატება ძირითად ხატულას)',grp:'man',src:'kursi',stems:['მოტორიზ','motorized','motorised']},
+ mtn:{ka:'სამთო',icons:['inf','mtn'],desc:'X + შევსებული „მთა“ ჩარჩოს ქვედა ნაწილში',grp:'man',src:'kursi',stems:['სამთო','mountain']},
+ art:{ka:'საარტილერიო (საველე)',icons:['art'],desc:'შევსებული წრე ცენტრში',grp:'fire',src:'kursi',stems:['საარტილერი','არტილერი','artillery']},
+ mlrs:{ka:'მრავალლულიანი (რეაქტიული) არტილერია',icons:['mlrs'],desc:'შევსებული წრე და ორმაგი ისარი ზემოთ',grp:'fire',src:'kursi',stems:['მრავალლულიან','რეაქტიული არტილერ','mlrs','rocket artillery']},
+ mor:{ka:'ნაღმტყორცნების',icons:['mor'],desc:'პატარა წრე და ისარი ზემოთ',grp:'fire',src:'kursi',stems:['ნაღმტყორცნ','ნაღმსატყორც','ნამღტყორცნ','mortar']},
+ at:{ka:'ტანკსაწინააღმდეგო',icons:['at'],desc:'შებრუნებული V — ქვედა კუთხეებიდან ზედა შუა წერტილამდე',grp:'fire',src:'kursi',stems:['ტანკსაწინააღმდეგ','anti tank','antitank','anti armor','anti armour']},
+ atgm:{ka:'ტანკსაწინააღმდეგო სარაკეტო',icons:['atgm'],desc:'შებრუნებული V + ორმაგი ისარი შიგნით',grp:'fire',src:'kursi',stems:['ტანკსაწინააღმდეგო სარაკეტ','atgm','anti tank missile']},
+ ad:{ka:'საჰაერო თავდაცვის',icons:['ad'],desc:'გუმბათისებრი რკალი ჩარჩოს ქვედა ნაწილში',grp:'fire',src:'kursi',stems:['საჰაერო თავდაცვ','საზენიტ','air defense','air defence']},
+ amd:{ka:'საჰაერო-სარაკეტო თავდაცვის',icons:['amd'],desc:'გუმბათი + რაკეტა შუაში',grp:'fire',src:'kursi',stems:['საჰაერო სარაკეტო თავდაცვ','air and missile defense']},
+ eng:{ka:'საინჟინრო',icons:['eng'],desc:'„ხიდი“ — ჰორიზონტალი სამი ფეხით (შუა მოკლე)',grp:'sup',src:'kursi',stems:['საინჟინრ','ინჟინ','მესანგრ','engineer','sapper']},
+ sig:{ka:'კავშირგაბმულობის',icons:['sig'],desc:'ელვა — ზიგზაგი კუთხიდან კუთხემდე',grp:'sup',src:'kursi',stems:['კავშირგაბმ','signal','communications']},
+ rw:{ka:'სახმელეთო ძალების ავიაცია (ვერტმფრენი)',icons:['rw'],desc:'„პეპელა-ჰალსტუხი“ — ვერტმფრენის ხრახნი',grp:'sup',src:'kursi',stems:['ვერტმფრ','შვეულმფრ','ავიაცი','rotary wing','helicopter','aviation']},
+ uav:{ka:'უპილოტო საფრენი აპარატი',icons:['uav'],desc:'ფრთის ფორმის „V“ ჩარჩოს ზედა ნაწილში',grp:'sup',src:'kursi',stems:['უპილოტ','დრონ','uav','drone']},
+ sf:{ka:'სპეცდანიშნულების',icons:['sf'],desc:'წარწერა „SF“',grp:'sup',src:'app6',stems:['სპეცდანიშნულ','სპეცოპერაც','სპეცრაზმ','special forces','sf']},
+ med:{ka:'სამედიცინო',icons:['med'],desc:'ჯვარი მთელ ჩარჩოზე',grp:'sus',src:'kursi',stems:['სამედიცინ','სანიტარ','medical']},
+ sup:{ka:'მომარაგების',icons:['sup'],desc:'ჰორიზონტალი ჩარჩოს ქვედა ნაწილში',grp:'sus',src:'app6',stems:['მომარაგ','ლოჯისტ','supply','logistics','logistic']},
+ mnt:{ka:'ტექმომსახურების',icons:['mnt'],desc:'„ქანჩის გასაღები“ — ხაზი ორი რკალით',grp:'sus',src:'app6',stems:['ტექმომსახურ','სარემონტ','შეკეთ','maintenance']},
+ sp:{ka:'თვითმავალი / მუხლუხა',icons:['armor'],desc:'ოვალი ემატება ძირითად ხატულას (მოდიფიკატორი)',grp:'mod',src:'kursi',stems:['თვითმავალ','მუხლუხ','self propelled','tracked']}
 };
-const GRP={man:'მანევრი',fire:'ცეცხლი და საჰაერო თავდაცვა',sup:'საბრძოლო უზრუნველყოფა',sus:'ზურგი და მომსახურება',mod:'მოდიფიკატორი'};
+
+/* ---------- მომარაგების კლასები ---------- */
+const CLS={
+ 1:{ka:'1-კლასი — საკვები, წყალი',stems:['საკვებ','სურსათ','წყალ']},
+ 2:{ka:'2-კლასი — ტანსაცმელი, ინდივიდუალური აღჭურვილობა',stems:['ტანსაცმ','ინდივიდუალური აღჭურვ']},
+ 3:{ka:'3-კლასი — საწვავ-საპოხი მასალები',stems:['საწვავ','საპოხ','fuel']},
+ 4:{ka:'4-კლასი — საინჟინრო / სამშენებლო მასალები',stems:['სამშენებლო მასალ','საინჟინრო მასალ']},
+ 5:{ka:'5-კლასი — საბრძოლო მასალები',stems:['საბრძოლო მასალ','ammunition']},
+ 6:{ka:'6-კლასი — პირადი მოხმარების საგნები',stems:['პირადი მოხმარ']},
+ 7:{ka:'7-კლასი — ძირითადი ტექნიკა',stems:['ძირითადი ტექნიკ']},
+ 8:{ka:'8-კლასი — სამედიცინო მომარაგების საგნები',stems:['სამედიცინო მომარაგ']},
+ 9:{ka:'9-კლასი — სათადარიგო ნაწილები',stems:['სათადარიგო ნაწილ','spare part']},
+ 10:{ka:'10-კლასი — სასოფლო-სამეურნეო, არასამხედრო ქონება',stems:['სასოფლო','არასამხედრო ქონებ']}
+};
+
+/* ---------- მოდიფიკატორები ---------- */
 const MOD={
  hq:{ka:'შტაბი',desc:'ბოძი ჩარჩოს მარცხენა ქვედა წერტილიდან ქვემოთ',stems:['შტაბ','headquarters','hq']},
- abn:{ka:'სადესანტო (საჰაერო-სადესანტო)',desc:'„ფრთები“ — ორმაგი რკალი ხატულის ქვემოთ',stems:['სადესანტ','დესანტ','airborne','parachute']}
+ abn:{ka:'სადესანტო (საჰაერო-სადესანტო)',desc:'„ფრთები“ — ორმაგი რკალი ხატულის ქვემოთ',stems:['სადესანტ','დესანტ','airborne','parachute']},
+ planned:{ka:'დაგეგმილი / მომავალი მდებარეობა',desc:'წყვეტილი ხაზით დახაზული ჩარჩო',stems:['დაგეგმილ','მომავალ','planned','anticipated']},
+ rein:{ka:'გაძლიერებული (+)',desc:'ველი 7 — „(+)“',stems:['გაძლიერებულ','reinforced']},
+ det:{ka:'შესუსტებული / გამოყოფით (−)',desc:'ველი 7 — „(−)“',stems:['შესუსტებულ','გამოყოფით','reduced','detached']}
 };
+
+/* ---------- ეშელონი (სიდიდე) — კურსის ტერმინებით ---------- */
 const ECH={
- team:{ka:'გუნდი',mark:'Ø — წრე ხაზით',stems:['გუნდ','fire team','team']},
- squad:{ka:'განყოფილება',mark:'• — ერთი წერტილი',stems:['განყოფილებ','squad']},
- section:{ka:'სექცია',mark:'•• — ორი წერტილი',stems:['სექცი','section']},
- platoon:{ka:'ოცეული',mark:'••• — სამი წერტილი',stems:['ოცეულ','platoon']},
- company:{ka:'ასეული / ბატარეა',mark:'I — ერთი ვერტიკალი',stems:['ასეულ','ბატარე','ესკადრონ','company','battery','troop']},
- battalion:{ka:'ბატალიონი / დივიზიონი',mark:'II — ორი ვერტიკალი',stems:['ბატალიონ','დივიზიონ','battalion','squadron']},
- regiment:{ka:'პოლკი',mark:'III — სამი ვერტიკალი',stems:['პოლკ','regiment']},
- brigade:{ka:'ბრიგადა',mark:'X',stems:['ბრიგად','brigade']},
- division:{ka:'დივიზია',mark:'XX',stems:['დივიზი','division']},
- corps:{ka:'კორპუსი',mark:'XXX',stems:['კორპუს','corps']},
- army:{ka:'არმია',mark:'XXXX',stems:['არმი','army']}
+ team:{ka:'ჯგუფი',mark:'Ø — წრე ხაზით',src:'kursi',stems:['ჯგუფ','გუნდ','fire team','team','crew']},
+ squad:{ka:'ათეული / გათვლა / სექცია',mark:'• — ერთი წერტილი',src:'kursi',stems:['ათეულ','გათვლ','სექცი','განყოფილებ','squad']},
+ section:{ka:'რაზმი',mark:'•• — ორი წერტილი',src:'kursi',stems:['რაზმ','section']},
+ platoon:{ka:'ოცეული',mark:'••• — სამი წერტილი',src:'kursi',stems:['ოცეულ','platoon']},
+ company:{ka:'ასეული / ბატარეა',mark:'I — ერთი ვერტიკალი',src:'kursi',stems:['ასეულ','ბატარე','ესკადრონ','company','battery','troop']},
+ battalion:{ka:'ბატალიონი / დივიზიონი',mark:'II — ორი ვერტიკალი',src:'kursi',stems:['ბატალიონ','დივიზიონ','battalion','squadron']},
+ regiment:{ka:'პოლკი',mark:'III — სამი ვერტიკალი',src:'app6',stems:['პოლკ','regiment']},
+ brigade:{ka:'ბრიგადა',mark:'X',src:'kursi',stems:['ბრიგად','brigade']},
+ division:{ka:'დივიზია',mark:'XX',src:'kursi',stems:['დივიზი','division']},
+ corps:{ka:'კორპუსი',mark:'XXX',src:'app6',stems:['კორპუს','corps']},
+ army:{ka:'არმია',mark:'XXXX',src:'kursi',stems:['არმი','army']}
 };
 const ECH_ORDER=['team','squad','section','platoon','company','battalion','regiment','brigade','division','corps','army'];
 
-const TG={
- ef:'ზემოქმედება მოწინააღმდეგეზე (FM 3-90)',
- fa:'მეგობრული ძალების ქმედება (FM 3-90)',
- fm:'შეტევის / მანევრის ფორმა',
- rt:'რეტროგრადული ოპერაცია',
- sec:'უსაფრთხოების ამოცანა',
- ob:'დაბრკოლების ეფექტი'
-};
-const TK={
- block:{ka:'ბლოკირება',en:'Block',g:['ef','ob'],stems:['ბლოკირ','ჩაკეტ','block'],
-  def:'მოწინააღმდეგეს ეკრძალება კონკრეტულ არეალში შესვლა ან განსაზღვრული მიმართულებით წინსვლა.'},
- canalize:{ka:'კანალიზება',en:'Canalize',g:['ef'],v:1,stems:['კანალიზ','არხში მოქცევ','შევიწროვ','canalize','canalise'],
-  def:'მოწინააღმდეგის მოძრაობის შეზღუდვა ვიწრო ზოლით — დაბრკოლებებით, ცეცხლით ან მანევრით.'},
- contain:{ka:'შეკავება',en:'Contain',g:['ef'],v:1,stems:['შეკავ','contain'],
-  def:'მოწინააღმდეგის შეჩერება, შემოფარგვლა ან მისი აქტივობის ერთ ფრონტზე მიჯაჭვა ისე, რომ ვერ შეძლოს ძალების გადაადგილება ან გასვლა.'},
- destroy:{ka:'განადგურება',en:'Destroy',g:['ef'],stems:['განადგურ','მოსპობ','destroy'],
-  def:'მოწინააღმდეგის ძალის ფიზიკურად საბრძოლო უუნარობამდე მიყვანა, ვიდრე ის არ აღდგება.'},
- disrupt:{ka:'დეზორგანიზება',en:'Disrupt',g:['ef','ob'],v:1,stems:['დეზორგანიზ','ჩაშლ','disrupt'],
-  def:'ცეცხლისა და დაბრკოლებების ინტეგრირებით მოწინააღმდეგის წყობის, ტემპისა და განრიგის რღვევა.'},
- fix:{ka:'მიჯაჭვა',en:'Fix',g:['ef','ob'],stems:['მიჯაჭვ','ფიქსირ','fix'],
-  def:'მოწინააღმდეგეს არ ეძლევა საშუალება, გადააადგილოს ძალების ნაწილი კონკრეტული ადგილიდან განსაზღვრული დროის განმავლობაში.'},
- isolate:{ka:'იზოლირება',en:'Isolate',g:['ef'],stems:['იზოლ','isolate','isolation'],
-  def:'ძალის მოწყვეტა მხარდაჭერის წყაროებისგან, რათა შემცირდეს მისი ეფექტიანობა და მოქმედების თავისუფლება.'},
- turn:{ka:'მოტრიალება',en:'Turn',g:['ef','ob'],v:1,stems:['მოტრიალ','შემობრუნ','turn'],
-  def:'მოწინააღმდეგის აიძულება, ერთი მიმართულებიდან მეორეზე გადაინაცვლოს — ჩვეულებრივ, დაბრკოლებებით და ცეცხლით.'},
- abf:{ka:'ცეცხლით შეტევა',en:'Attack by fire',g:['fa'],v:1,stems:['ცეცხლით შეტევ','ცეცხლით დარტყმ','attack by fire','abf'],
-  def:'პირდაპირი (არაპირდაპირი ცეცხლით მხარდაჭერილი) ცეცხლით მოწინააღმდეგის დაზიანება მასთან დაახლოების გარეშე.'},
- sbf:{ka:'ცეცხლით მხარდაჭერა',en:'Support by fire',g:['fa'],v:1,stems:['ცეცხლით მხარდაჭ','support by fire','sbf'],
-  def:'ძალა იკავებს პოზიციას, საიდანაც პირდაპირი ცეცხლით უჭერს მხარს სხვა მანევრირებად ძალას.'},
- breach:{ka:'გასასვლელის გაკეთება',en:'Breach',g:['fa'],v:1,stems:['ბრიჩ','გასასვლელის გაკეთ','დაბრკოლების გარღვევ','breach'],
-  def:'ყველა ხელმისაწვდომი საშუალებით მოწინააღმდეგის თავდაცვის, დაბრკოლების, ნაღმველის ან სიმაგრის გარღვევა ან მასში გასასვლელის უზრუნველყოფა.'},
- bypass:{ka:'შემოვლა',en:'Bypass',g:['fa'],stems:['შემოვლ','გვერდის ავლ','bypass'],
-  def:'დაბრკოლების, პოზიციის ან მოწინააღმდეგის ძალის შემოვლით მანევრი ტემპის შესანარჩუნებლად.'},
- clear:{ka:'გაწმენდა',en:'Clear',g:['fa'],stems:['გაწმენდ','clear'],
-  def:'დანიშნულ არეალში მოწინააღმდეგის ყველა ძალის განდევნა და ორგანიზებული წინააღმდეგობის აღმოფხვრა.'},
- seize:{ka:'ხელში ჩაგდება',en:'Seize',g:['fa'],stems:['ხელში ჩაგდ','დაუფლ','seize'],
-  def:'დანიშნული არეალის აღება გადამწყვეტი ძალის გამოყენებით.'},
- penetrate:{ka:'შეღწევა (გარღვევა)',en:'Penetrate',g:['fm'],stems:['შეღწევ','penetrate','penetration'],
-  def:'მოწინააღმდეგის თავდაცვის ხაზის გარღვევა და მისი თავდაცვითი სისტემის მოშლა.'},
- catk:{ka:'კონტრშეტევა',en:'Counterattack',g:['fm'],stems:['კონტრშეტევ','კონტრატაკ','counterattack','counter attack','catk'],
-  def:'თავდაცვაში მყოფი ძალის მთლიანი ან ნაწილობრივი შეტევა მოწინააღმდეგის შემტევ ძალაზე.'},
- ambush:{ka:'ჩასაფრება',en:'Ambush',g:['fm'],v:1,stems:['ჩასაფრ','ambush'],
-  def:'შეტევა ფარული პოზიციებიდან მოძრავ ან დროებით შეჩერებულ მოწინააღმდეგეზე.'},
- delay:{ka:'შეფერხება',en:'Delay',g:['rt'],v:1,stems:['შეფერხ','delay'],
-  def:'სივრცის დათმობა დროის მოსაგებად: მოწინააღმდეგის ტემპის შენელება და მაქსიმალური ზიანი გადამწყვეტ ბრძოლაში ჩაბმის გარეშე.'},
- screen:{ka:'ეკრანირება',en:'Screen',g:['sec'],v:1,stems:['ეკრან','screen'],
-  def:'უსაფრთხოების ამოცანა, რომლის მთავარი მიზანი ძირითადი ძალების ადრეული გაფრთხილებაა.'},
- guard:{ka:'დაცვა',en:'Guard',g:['sec'],v:1,stems:['დაცვ','guard'],
-  def:'ძირითადი ძალების დაცვა ბრძოლით — დროის მოგება, მოწინააღმდეგის დაკვირვება და მოხსენება.'},
- cover:{ka:'გადაფარვა',en:'Cover',g:['sec'],v:1,stems:['გადაფარ','covering force','cover'],
-  def:'ძირითადი ძალებისგან დამოუკიდებლად მოქმედი ძალა, რომელიც იცავს მათ, აწარმოებს დაზვერვას და ებრძვის მოწინააღმდეგეს.'}
-};
-const AMBIG=[{stem:'გარღვევ',keys:['breach','penetrate']}];
+/* ---------- შეიარაღების სიმძიმე ---------- */
+const LVL={1:{ka:'მსუბუქი',stems:['მსუბუქ','light']},2:{ka:'საშუალო',stems:['საშუალო','medium']},3:{ka:'მძიმე',stems:['მძიმე','heavy']}};
 
-const STOP=new Set(['ერთეული','ერთეულის','ქვედანაყოფი','ქვედანაყოფის','ნაწილი','ნაწილის','ძალები','ძალების','ამოცანა','ამოცანის','მისია','მისიის','ნიშანი','ნიშნის','სიმბოლო','ტაქტიკური','ასრულებს','ახორციელებს','აწარმოებს','unit','task','symbol','forces','force','with','mission','performs','conducts','მიერ','რომელიც','ერთად']);
+/* ---------- სპეციალური ნიშნები (ჩარჩოს გარეშე) ---------- */
+/* svg(c, lvl) აბრუნებს SVG-ის შიგთავსს; vb — viewBox; col: 'aff' = აფილაციის ფერი, 'obs' = მწვანე (დაბრკოლება/ნაღმი) */
+const SPG={pt:'პუნქტები',pos:'პოზიციები და ობიექტები',mv:'გადაადგილების ღერძი და შეტევის მიმართულება',wp:'შეიარაღება',eq:'ტექნიკა',ft:'ფორტიფიკაციური ნაგებობები',ob:'ხაზოვანი დაბრკოლებები',mn:'ნაღმები',mf:'დანაღმული ველები'};
+const tri=(fill)=>`<path d="M80,30 L135,125 H25 Z"${fill?' fill="currentColor"':''}/>`;
+const circ=()=>`<circle cx="80" cy="80" r="48"/>`;
+const pent=()=>`<path d="M48,28 H112 V92 L80,128 L48,92 Z"/>`;
+const shaft=(lvl,y)=>lvl===2?`<path d="M50,${y} H70"/>`:lvl===3?`<path d="M50,${y-6} H70 M50,${y+6} H70"/>`:'';
+const head2=(y)=>`<path d="M46,${y+14} L60,${y} L74,${y+14} M46,${y+26} L60,${y+12} L74,${y+26}"/>`;
+const legs=`<path d="M46,124 L60,108 L74,124"/>`;
+const ebar=`<path d="M28,24 V76 M172,24 V76"/>`;
+const AP=(x,y)=>`<circle cx="${x}" cy="${y}" r="10" fill="currentColor"/><path d="M${x-7},${y-7} L${x-15},${y-17} M${x+7},${y-7} L${x+15},${y-17}"/>`;
+const AT=(x,y)=>`<circle cx="${x}" cy="${y}" r="10" fill="currentColor"/>`;
+const SP={
+ /* პუნქტები */
+ sp_all:{g:'pt',ka:'მომარაგების პუნქტი (ყველა სახეობისთვის)',vb:'0 0 160 160',stems:['მომარაგების პუნქტ','supply point'],svg:()=>circ()+`<path d="M36,100 H124"/>`},
+ sp_med:{g:'pt',ka:'სამედიცინო მომარაგების პუნქტი',vb:'0 0 160 160',stems:['სამედიცინო მომარაგების პუნქტ'],svg:()=>circ()+`<path d="M80,32 V128 M32,80 H128"/>`},
+ hosp:{g:'pt',ka:'ჰოსპიტალი / სამედიცინო დახმარების პუნქტი',vb:'0 0 160 160',stems:['ჰოსპიტალ','სამედიცინო დახმარების პუნქტ','hospital','aid station'],svg:()=>circ()+`<path d="M80,32 V128 M32,80 H128 M58,70 V90 M102,70 V90"/>`},
+ sp_ammo:{g:'pt',ka:'საბრძოლო მასალების პუნქტი',vb:'0 0 160 160',stems:['საბრძოლო მასალების პუნქტ','საბრძოლო მასალის პუნქტ','ammunition point'],svg:()=>circ()+`<path d="M68,108 V72 A12 14 0 0 1 92,72 V108 M60,108 H100"/>`},
+ kia:{g:'pt',ka:'დაღუპულთა შეგროვების პუნქტი',vb:'0 0 160 160',stems:['დაღუპულთა','დაღუპულების','mortuary','kia'],svg:()=>circ()+`<path d="M62,50 H98 V112 H62 Z M80,58 V100 M70,72 H90"/>`},
+ pow:{g:'pt',ka:'ტყვეების შეკრების პუნქტი',vb:'0 0 160 160',stems:['ტყვე','epw','prisoner'],svg:()=>circ()+`<text x="80" y="87" text-anchor="middle" font-family="${GEO}" font-weight="700" font-size="20" fill="currentColor" stroke="none">ტყვეები</text>`},
+ /* პოზიციები და ობიექტები */
+ rv:{g:'pos',ka:'შეხვედრის პუნქტი',vb:'0 0 160 160',stems:['შეხვედრის პუნქტ','rendezvous'],svg:()=>circ()+`<path d="M46,46 L114,114 M114,46 L46,114"/>`},
+ pt_oth:{g:'pos',ka:'სხვა პუნქტები',vb:'0 0 160 160',stems:['სხვა პუნქტ'],svg:()=>pent()},
+ cp:{g:'pos',ka:'კონტროლის პუნქტი (კპ)',vb:'0 0 160 160',stems:['კონტროლის პუნქტ','საკონტროლო პუნქტ','checkpoint','control point'],svg:()=>pent()+`<text x="80" y="78" text-anchor="middle" font-family="${GEO}" font-weight="700" font-size="28" fill="currentColor" stroke="none">კპ</text>`},
+ cop:{g:'pos',ka:'საბრძოლო საგუშაგო',vb:'0 0 160 160',stems:['საბრძოლო საგუშაგ','საგუშაგ','combat outpost'],svg:()=>{let t='';for(let i=1;i<6;i++){const k=i/6;t+=`M${(80-55*k).toFixed(1)},${(30+95*k).toFixed(1)} l-11,-6 M${(80+55*k).toFixed(1)},${(30+95*k).toFixed(1)} l11,-6 M${(25+110*k).toFixed(1)},125 v12 `}return tri()+`<path d="${t}"/>`}},
+ op:{g:'pos',ka:'სათვალთვალო პოზიცია',vb:'0 0 160 160',stems:['სათვალთვალო','დაკვირვების პუნქტ','observation post'],svg:()=>tri()},
+ fo_art:{g:'pos',ka:'არტილერიის მეწინავე მეთვალთვალის პოზიცია',vb:'0 0 160 160',stems:['არტილერიის მეწინავე მეთვალთვალ','არტილერიის მეთვალთვალ'],svg:()=>tri()+`<circle cx="80" cy="95" r="7" fill="currentColor"/>`},
+ fo_inf:{g:'pos',ka:'ქვეითი მეწინავე მეთვალთვალის პოზიცია',vb:'0 0 160 160',stems:['ქვეითი მეწინავე მეთვალთვალ','ქვეითის მეთვალთვალ','მეწინავე მეთვალთვალ'],svg:()=>tri()+`<path d="M25,125 L107,77 M135,125 L53,77"/>`},
+ /* გადაადგილება */
+ ax:{g:'mv',ka:'გადაადგილების ღერძი',vb:'0 0 300 90',stems:['გადაადგილების ღერძ','axis of advance'],svg:()=>`<path d="M15,32 H225 V14 L285,45 L225,76 V58 H15"/>`},
+ ax_plan:{g:'mv',ka:'დაგეგმილი გადაადგილების ღერძი',vb:'0 0 300 90',stems:['დაგეგმილი გადაადგილების ღერძ'],svg:()=>`<path d="M15,32 H225 V14 L285,45 L225,76 V58 H15" stroke-dasharray="14 9"/>`},
+ ax_feint:{g:'mv',ka:'ცრუ გადაადგილების ღერძი',vb:'0 0 300 90',stems:['ცრუ გადაადგილების ღერძ'],svg:()=>`<path d="M15,32 H215 V14 L275,45 L215,76 V58 H15"/><path d="M240,8 L295,45 L240,82" stroke-dasharray="9 7"/>`},
+ ax_main:{g:'mv',ka:'ძირითადი შეტევის გადაადგილების ღერძი',vb:'0 0 300 90',stems:['ძირითადი შეტევის გადაადგილების ღერძ','main attack axis'],svg:()=>`<path d="M15,32 H225 V14 L285,45 L225,76 V58 H15"/><path d="M215,25 L255,45 L215,65"/>`},
+ dir_main:{g:'mv',ka:'ძირითადი შეტევის მიმართულება',vb:'0 0 300 90',stems:['ძირითადი შეტევის მიმართულებ','main attack'],svg:()=>`<path d="M15,45 H275 M250,25 L280,45 L250,65 M236,25 L266,45 L236,65"/>`},
+ dir_sup:{g:'mv',ka:'მხარდამჭერი შეტევის მიმართულება',vb:'0 0 300 90',stems:['მხარდამჭერი შეტევის მიმართულებ','supporting attack'],svg:()=>`<path d="M15,45 H280 M252,28 L282,45 L252,62"/>`},
+ dir_plan:{g:'mv',ka:'დაგეგმილი შეტევის მიმართულება',vb:'0 0 300 90',stems:['დაგეგმილი შეტევის მიმართულებ','planned attack'],svg:()=>`<path d="M15,45 H280 M252,28 L282,45 L252,62" stroke-dasharray="12 8"/>`},
+ dir_feint:{g:'mv',ka:'ცრუ შეტევის მიმართულება',vb:'0 0 300 90',stems:['ცრუ შეტევის მიმართულებ','feint attack direction'],svg:()=>`<path d="M15,45 H262 M234,28 L264,45 L234,62"/><path d="M256,22 L292,45 L256,68" stroke-dasharray="8 6"/>`},
+ dir_leap:{g:'mv',ka:'წინ გადასწრებით შეტევის მიმართულება',vb:'0 0 300 90',stems:['წინ გადასწრებით','გადასწრებით შეტევ'],svg:()=>`<path d="M15,58 H118 A22 22 0 0 1 162,58 H280 M252,41 L282,58 L252,75"/><path d="M140,8 C128,22 152,34 140,48 C128,62 152,74 140,88" stroke-width="3"/>`},
+ /* შეიარაღება (lvl: 1 მსუბუქი, 2 საშუალო, 3 მძიმე) */
+ w_mg:{g:'wp',lv:1,ka:'ავტომატური იარაღი / ტყვიამფრქვევი',vb:'0 0 120 140',stems:['ავტომატური იარაღ','ტყვიამფრქვევ','machine gun'],svg:(c,l)=>`<path d="M60,124 V24 M46,40 L60,24 L74,40"/>`+shaft(l,72)},
+ w_mor:{g:'wp',lv:1,ka:'ნაღმტყორცნი (იარაღი)',vb:'0 0 120 140',stems:[],svg:(c,l)=>`<path d="M60,106 V24 M46,40 L60,24 L74,40"/><circle cx="60" cy="114" r="8"/>`+shaft(l,68)},
+ w_atgl:{g:'wp',lv:1,ka:'ტანკსაწინააღმდეგო ყუმბარსატყორცნი',vb:'0 0 120 140',stems:['ყუმბარსატყორცნ','grenade launcher'],svg:(c,l)=>`<path d="M60,108 V30"/>`+head2(18)+legs+shaft(l,76)},
+ w_rl:{g:'wp',lv:1,ka:'რეაქტიული საარტილერიო დანადგარი',vb:'0 0 120 140',stems:['რეაქტიული საარტილერიო დანადგარ','rocket launcher'],svg:(c,l)=>`<path d="M60,124 V30 M42,96 V124 M78,96 V124"/>`+head2(18)+shaft(l,70)},
+ w_ssm:{g:'wp',lv:1,ka:'სარაკეტო კომპლექსი ხმელეთი-ხმელეთი',vb:'0 0 120 140',stems:['ხმელეთი ხმელეთ','surface to surface'],svg:(c,l)=>`<path d="M36,122 V62 A24 26 0 0 1 84,62 V122 M30,122 H90"/>`+(l>=2?`<path d="M60,38 V122"/>`:'')+(l===3?`<path d="M36,82 H84"/>`:'')},
+ w_at:{g:'wp',lv:1,ka:'ტანკსაწინააღმდეგო იარაღი',vb:'0 0 120 140',stems:['ტანკსაწინააღმდეგო იარაღ','anti tank weapon'],svg:(c,l)=>`<path d="M60,108 V24 M46,40 L60,24 L74,40"/>`+legs+shaft(l,72)},
+ w_sam:{g:'wp',lv:1,ka:'სარაკეტო კომპლექსი მიწა-ჰაერი',vb:'0 0 120 140',stems:['მიწა ჰაერ','surface to air','sam'],svg:(c,l)=>`<path d="M36,122 V62 A24 26 0 0 1 84,62 V122 M30,122 H90 M36,96 Q60,80 84,96"/>`+(l>=2?`<path d="M60,38 V122"/>`:'')+(l===3?`<path d="M36,70 H84"/>`:'')},
+ w_gun:{g:'wp',lv:1,ka:'ქვემეხი',vb:'0 0 120 140',stems:['ქვემეხ','cannon','gun'],svg:(c,l)=>`<path d="M60,20 V124"/>`+(l===3?`<rect x="40" y="62" width="40" height="18"/>`:`<path d="M42,56 V86 M78,56 V86${l===2?' M42,71 H78':''}"/>`)},
+ w_how:{g:'wp',lv:1,ka:'ჰაუბიცა',vb:'0 0 120 140',stems:['ჰაუბიც','howitzer'],svg:(c,l)=>`<path d="M60,20 V104"/><circle cx="60" cy="112" r="8"/>`+(l===3?`<rect x="40" y="56" width="40" height="18"/>`:`<path d="M42,50 V80 M78,50 V80${l===2?' M42,65 H78':''}"/>`)},
+ w_sph:{g:'wp',lv:1,ka:'თვითმავალი ჰაუბიცა',vb:'0 0 120 150',stems:['თვითმავალი ჰაუბიც','self propelled howitzer'],svg:(c,l)=>`<path d="M60,16 V96"/><circle cx="60" cy="104" r="8"/><ellipse cx="60" cy="130" rx="32" ry="9"/>`+(l===3?`<rect x="40" y="48" width="40" height="18"/>`:`<path d="M42,42 V72 M78,42 V72${l===2?' M42,57 H78':''}"/>`)},
+ /* ტექნიკა */
+ e_tank:{g:'eq',ka:'ტანკი',en:'Tank',vb:'0 0 200 100',stems:['ტანკი ტექნიკ','ტექნიკა ტანკ'],svg:()=>ebar+`<path d="M28,40 H172 M28,60 H172"/>`},
+ e_ifv:{g:'eq',ka:'ქვეითთა საბრძოლო მანქანა (ქსმ)',en:'Infantry fighting vehicle (IFV)',vb:'0 0 200 100',stems:['ქვეითთა საბრძოლო მანქან','ქსმ','ქმს','ifv','bmp','ბმპ'],svg:()=>ebar+`<path d="M28,50 L58,28 H142 L172,50 L142,72 H58 Z"/>`},
+ e_apc:{g:'eq',ka:'ჯავშანმანქანა / ჯავშანტრანსპორტიორი (ბტრ)',en:'Armored vehicle',vb:'0 0 200 100',stems:['ჯავშანტრანსპორტიორ','ჯავშანმანქან','ბტრ','btr','apc','armored vehicle'],svg:()=>ebar+`<path d="M28,66 L100,34 L172,66 M28,66 H172"/>`},
+ e_arv:{g:'eq',ka:'სარემონტო-საევაკუაციო ჯავშანმანქანა',en:'Recovery armored vehicle',vb:'0 0 200 100',stems:['საევაკუაციო ჯავშანმანქან','სარემონტო ჯავშანმანქან','recovery vehicle'],svg:()=>ebar+`<path d="M28,50 L100,24 L172,50 L100,76 Z"/>`},
+ /* ფორტიფიკაცია */
+ f_ind:{g:'ft',ka:'ინდივიდუალური სანგარი',vb:'0 0 200 120',stems:['ინდივიდუალური საგან','ინდივიდუალური სანგარ','foxhole'],svg:()=>`<path d="M60,82 V44 H140 V82"/>`},
+ f_conc:{g:'ft',ka:'ბეტონის სანგარი',vb:'0 0 200 120',stems:['ბეტონის','concrete'],svg:()=>`<path d="M100,10 L152,60 L100,110 L48,60 Z M84,44 H116 V76 H84 Z M74,34 L84,44 M126,34 L116,44 M126,86 L116,76 M74,86 L84,76"/>`},
+ f_bunk:{g:'ft',ka:'ხანგრძლივმოქმედი საცეცხლე ნაგებობა',vb:'0 0 200 120',stems:['ხანგრძლივმოქმედ','საცეცხლე ნაგებობ','bunker'],svg:()=>`<rect x="58" y="38" width="84" height="44"/>`},
+ f_above:{g:'ft',ka:'მიწისზედა თავშესაფარი',vb:'0 0 200 120',stems:['მიწისზედა','მოწისზედა','above ground shelter'],svg:()=>`<rect x="84" y="22" width="32" height="34" fill="currentColor"/><path d="M62,56 H138 M100,56 V100"/>`},
+ f_under:{g:'ft',ka:'მიწისქვეშა თავშესაფარი',vb:'0 0 200 120',stems:['მიწისქვეშა','underground shelter'],svg:()=>`<path d="M62,22 H138"/><rect x="84" y="22" width="32" height="34" fill="currentColor"/><path d="M100,56 V100"/>`},
+ f_trench:{g:'ft',ka:'ფორტიფიკაციური ნაგებობა — პატარა ტრანშეა, მიწათხრილი',vb:'0 0 200 120',stems:['ტრანშე','მიწათხრილ','trench'],svg:()=>`<rect x="84" y="26" width="32" height="32" fill="currentColor"/><path d="M100,58 V100"/>`},
+ f_strong:{g:'ft',ka:'ასეულის საყრდენი პუნქტი',vb:'0 0 200 120',stems:['საყრდენი პუნქტ','strongpoint','strong point'],svg:()=>{let t='';for(let i=0;i<14;i++){const a=i/14*2*Math.PI,x=100+58*Math.cos(a),y=60+30*Math.sin(a);t+=`M${x.toFixed(1)},${y.toFixed(1)} L${(100+72*Math.cos(a)).toFixed(1)},${(60+42*Math.sin(a)).toFixed(1)} `}return `<rect x="42" y="30" width="116" height="60" rx="30"/><path d="${t}"/>`}},
+ f_line:{g:'ft',ka:'წინაღობათა გამაგრებული ხაზი',vb:'0 0 200 120',stems:['წინაღობათა გამაგრებულ','გამაგრებული ხაზ','fortified line'],svg:()=>`<path d="M10,88 H44 V52 H78 V88 H112 V52 H146 V88 H190"/>`},
+ /* ხაზოვანი დაბრკოლებები */
+ o_ditch_u:{g:'ob',ka:'დაუსრულებელი ტანკსაწინააღმდეგო თხრილი',vb:'0 0 260 80',stems:['დაუსრულებელი ტანკსაწინააღმდეგო თხრილ','დაუსრულებელი თხრილ'],svg:()=>{let p='M15,28 H245 ';for(let x=25;x<230;x+=26)p+=`M${x},28 L${x+13},54 L${x+26},28 `;return `<path d="${p}"/>`}},
+ o_ditch:{g:'ob',ka:'მომზადებული ტანკსაწინააღმდეგო თხრილი',vb:'0 0 260 80',stems:['მომზადებული ტანკსაწინააღმდეგო თხრილ','ტანკსაწინააღმდეგო თხრილ','anti tank ditch'],svg:()=>{let p='';for(let x=25;x<230;x+=26)p+=`<path d="M${x},28 L${x+13},54 L${x+26},28 Z" fill="currentColor"/>`;return `<path d="M15,28 H245"/>`+p}},
+ o_ditch_m:{g:'ob',ka:'ტანკსაწინააღმდეგო ნაღმებით გაძლიერებული მომზადებული თხრილი',vb:'0 0 260 90',stems:['ნაღმებით გაძლიერებულ'],svg:()=>{let p='<path d="M15,30 Q75,62 130,40 Q190,18 245,30"/>';[[30,32],[95,46],[165,33],[228,30]].forEach(([x,y])=>p+=`<path d="M${x-10},${y} L${x},${y+22} L${x+10},${y} Z" fill="currentColor"/>`);[[62,44],[130,40],[198,27]].forEach(([x,y])=>p+=`<circle cx="${x}" cy="${y-8}" r="6" fill="currentColor"/>`);return p}},
+ o_lin:{g:'ob',ka:'გაურკვეველი ტიპის ხაზოვანი დაბრკოლება',vb:'0 0 260 80',stems:['ხაზოვანი დაბრკოლებ','linear obstacle'],svg:()=>{let p='';for(let x=10;x<240;x+=58)p+=`M${x},60 H${x+14} L${x+30},30 L${x+46},60 `;return `<path d="${p}"/>`}},
+ /* ნაღმები */
+ m_ap:{g:'mn',ka:'ქვეითსაწინააღმდეგო ნაღმი',en:'Anti-infantry mine',vb:'0 0 120 100',stems:['ქვეითსაწინააღმდეგო ნაღმ','anti infantry mine','anti personnel mine'],svg:()=>AP(60,62)},
+ m_at:{g:'mn',ka:'ტანკსაწინააღმდეგო ნაღმი',en:'Anti-tank mine',vb:'0 0 120 100',stems:['ტანკსაწინააღმდეგო ნაღმ','anti tank mine'],svg:()=>AT(60,55)},
+ m_clay:{g:'mn',ka:'მიმართული მოქმედების ნაღმი (კლეიმორი)',en:'Claymore',vb:'0 0 120 100',stems:['კლეიმორ','claymore','მიმართული მოქმედების'],svg:()=>AT(50,55)+`<path d="M60,55 L96,44 M84,40 L96,44 L88,54"/>`},
+ m_unk:{g:'mn',ka:'უცნობი ტიპის ნაღმი',en:'Unknown type',vb:'0 0 120 100',stems:['უცნობი ტიპის ნაღმ','unknown mine'],svg:()=>`<circle cx="60" cy="55" r="12"/>`},
+ m_trap:{g:'mn',ka:'ტანკსაწინააღმდეგო ნაღმი მოუხსნელობის მოწყობილობით',en:'Anti-tank trap mine',note:'სლაიდზე: ANTI TANK TRAP MINE',vb:'0 0 120 100',stems:['trap mine','ნაღმი მახე','მოუხსნელ'],svg:()=>AT(56,32)+`<path d="M56,42 V80 L88,66"/>`},
+ /* დანაღმული ველები */
+ mf_ap:{g:'mf',ka:'ქვეითსაწინააღმდეგო დანაღმული ველი',en:'Anti-infantry minefield',vb:'0 0 200 100',stems:['ქვეითსაწინააღმდეგო დანაღმულ','anti infantry minefield'],svg:()=>`<rect x="18" y="28" width="164" height="58"/>`+AP(60,64)+AP(100,64)+AP(140,64)},
+ mf_at:{g:'mf',ka:'ტანკსაწინააღმდეგო დანაღმული ველი',en:'Anti-tank minefield',vb:'0 0 200 100',stems:['ტანკსაწინააღმდეგო დანაღმულ','anti tank minefield'],svg:()=>`<rect x="18" y="28" width="164" height="58"/>`+AT(60,57)+AT(100,57)+AT(140,57)},
+ mf_mix:{g:'mf',ka:'შერეული დანაღმული ველი',en:'Mixed minefield',vb:'0 0 200 100',stems:['შერეული დანაღმულ','mixed minefield'],svg:()=>`<rect x="18" y="28" width="164" height="58"/>`+AP(60,64)+AT(100,57)+AP(140,64)},
+ mf_dummy:{g:'mf',ka:'დანაღმული ველი „სახურავით“',en:'Glowing minefield (სლაიდის მიხედვით)',note:'სლაიდზე: GLOWING MINEFIELD. ADP 1-02-ში ასეთი „სახურავი“ ცრუ (dummy) დანაღმულ ველს აღნიშნავს — დააზუსტეთ',vb:'0 0 200 110',stems:['glowing minefield','ცრუ დანაღმულ','dummy minefield'],svg:()=>`<path d="M18,40 L100,8 L182,40"/><rect x="18" y="40" width="164" height="58"/><circle cx="60" cy="69" r="11"/><circle cx="100" cy="69" r="11"/><circle cx="140" cy="69" r="11"/>`},
+ mf_grp:{g:'mf',ka:'ნაღმების ჯგუფი',en:'Mine groups',vb:'0 0 200 100',stems:['ნაღმების ჯგუფ','mine group'],svg:()=>`<path d="M50,80 L70,46 Q100,28 130,46 L150,80" stroke-dasharray="26 12"/>`},
+ mf_gen:{g:'mf',ka:'დანაღმული ველი (ზოგადი)',vb:'0 0 200 100',stems:['დანაღმულ','minefield'],svg:()=>`<rect x="18" y="28" width="164" height="58"/>`+AT(60,57)+AT(100,57)+AT(140,57)}
+};
+SP.w_mor.stems=['ნაღმტყორცნი იარაღ'];
+
+/* ---------- ტაქტიკური დავალებები (კურსის მასალა) ---------- */
+const TG={
+ ef:'ზემოქმედება მოწინააღმდეგეზე',
+ fa:'საკუთარი ძალების ქმედება',
+ fm:'შეტევის ფორმა',
+ dc:'შეცდომაში შეყვანა',
+ rt:'რეტროგრადული ოპერაცია',
+ mv:'ძალების გადაადგილება და ჩანაცვლება',
+ sec:'უსაფრთხოების დავალება'
+};
+/* img — www/tasks/<img>.png; ob — დაბრკოლების ეფექტის გრაფიკა; obdef — დაბრკოლების ეფექტის განმარტება; v:1 — გადასამოწმებელი */
+const TK={
+ ambush:{ka:'ჩასაფრება',en:'Ambush',g:['fm'],img:'ambush',stems:['ჩასაფრ','ambush'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც ცეცხლით ან სხვა გამანადგურებელი საშუალებით ფარული პოზიციებიდან უტევენ მოძრავ ან დროებით შეჩერებულ მოწინააღმდეგეს.'},
+ abf:{ka:'ცეცხლით შეტევა',en:'Attack by fire',g:['fa'],img:'abf',stems:['ცეცხლით შეტევ','ცეცხლით დარტყმ','attack by fire','abf'],
+  def:'ტაქტიკური დავალება, როდესაც მოწინააღმდეგესთან ბრძოლაში ჩაბმისთვის მეთაური იყენებს არაპირდაპირი ცეცხლით გაძლიერებულ პირდაპირ ცეცხლს ისე, რომ მოწინააღმდეგესთან მიახლოების გარეშე შეძლოს მისი განადგურება, ჩახშობა, ფიქსირება ან შეცდომაში შეყვანა.'},
+ sbf:{ka:'ცეცხლით მხარდაჭერა',en:'Support by fire',g:['fa'],img:'sbf',stems:['ცეცხლით მხარდაჭ','support by fire','sbf'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც სამანევრო ქვედანაყოფი გადაადგილდება პოზიციაზე, საიდანაც შეუძლია, მოწინააღმდეგეს გაუხსნას პირდაპირი ცეცხლი სხვა სამანევრო ქვედანაყოფის მხარდასაჭერად.'},
+ block:{ka:'ბლოკირება',en:'Block',g:['ef'],img:'block',ob:'block_ob',stems:['ბლოკირ','ჩაკეტ','block'],
+  def:'ტაქტიკური დავალება, რომელიც აღკვეთს მოწინააღმდეგის შეღწევას რაიონში ან ხელს უშლის მის წინსვლას მიახლოების მარშრუტის მიმართულებით ან მის გასწვრივ.',
+  obdef:'დაბრკოლებათა ეფექტი, რომელშიც ინტეგრირებულია საცეცხლე ზემოქმედების დაგეგმვა და დაბრკოლებების ძალისხმევა შემტევი მოწინააღმდეგის შესაჩერებლად კონკრეტულ მიახლოების მარშრუტზე ან ხელს უშლის მის გასვლას ბრძოლაში ჩაბმის რაიონში.'},
+ breach:{ka:'გარღვევა',en:'Breach',g:['fa'],img:'breach',stems:['გარღვევ','ბრიჩ','გასასვლელის გაკეთ','breach'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც ქვედანაყოფი იყენებს ყველა ხელთ არსებულ საშუალებას, რათა გაარღვიოს ან გაამაგროს გასასვლელი მოწინააღმდეგის თავდაცვაში, დაბრკოლებაში, დანაღმულ ველებში ან გამაგრებულ პოზიციებში.'},
+ bypass:{ka:'გვერდის ავლა',en:'Bypass',g:['fa'],img:'bypass',stems:['გვერდის ავლ','შემოვლ','bypass'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც მეთაური მიმართავს საკუთარი ქვედანაყოფის მანევრს დაბრკოლებების გვერდის ასავლელად და თავს არიდებს მოწინააღმდეგის ძალასთან ბრძოლაში ჩაბმას.'},
+ clear:{ka:'გაწმენდა',en:'Clear',g:['fa'],img:'clear',stems:['გაწმენდ','clear'],
+  def:'ტაქტიკური დავალება, რომელიც მეთაურისაგან მოითხოვს დანიშნული რაიონიდან მოწინააღმდეგის ყველა ძალის განდევნას ან ორგანიზებული წინააღმდეგობის აღმოფხვრას.'},
+ feint:{ka:'ცრუ შეტევა',en:'Feint',g:['dc'],img:'feint',stems:['ცრუ შეტევ','feint'],
+  def:'ტაქტიკური დავალება, რომელიც ამავე დროს თავდასხმითი მოქმედებაა და გულისხმობს მოწინააღმდეგესთან კონტაქტს, რაც ტარდება რეალური ძირითადი თავდასხმითი მოქმედების დროსა და ადგილთან დაკავშირებით მოწინააღმდეგის შეცდომაში შესაყვანად.'},
+ fix:{ka:'ფიქსირება',en:'Fix',g:['ef'],img:'fix',ob:'fix_ob',stems:['ფიქსირ','მიჯაჭვ','fix'],
+  def:'ტაქტიკური დავალება, რომლის დროსაც მეთაური ცდილობს, გარკვეული დროის განმავლობაში არ დაუშვას მოწინააღმდეგის ძალის კონკრეტული ადგილმდებარეობიდან გადაადგილება.',
+  obdef:'საინჟინრო დაბრკოლების ეფექტი, რომელიც ორიენტირებულია საცეცხლე ზემოქმედების დაგეგმვასა და დაბრკოლების ძალისხმევაზე, რომლის მიზანია შემტევი ძალის წინსვლის შენელება კონკრეტული რაიონის საზღვრებში, ჩვეულებრივ, ბრძოლაში ჩაბმის რაიონში.'},
+ infil:{ka:'შეჟონვა (ინფილტრაცია)',en:'Infiltration',g:['fm'],img:'infil',stems:['შეჟონვ','ინფილტრ','infiltrat'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც შემტევი ძალა ფარულად გადაადგილდება მოწინააღმდეგის მიერ დაკავებულ ტერიტორიაზე გავლის მიზნით ან გადაადგილდება მიზანმიმართულად ამ რაიონში შესასვლელად, რათა დაიკავოს ხელსაყრელი პოზიცია მოწინააღმდეგის ზურგში, სადაც მისი მცირე ზომის ქვედანაყოფები იქნებიან დაუცველი თავდაცვითი ცეცხლისგან.'},
+ exfil:{ka:'ექსფილტრაცია (ფარულად გამოსვლა)',en:'Exfiltrate',g:['fa'],img:'exfil',stems:['ექსფილტრ','ფარულად გამოსვლ','exfiltrat'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს პირადი შემადგენლობის ან ქვედანაყოფების გამოსვლას მოწინააღმდეგის მიერ კონტროლირებული რაიონებიდან მალულად, მოწინააღმდეგის შეცდომაში შეყვანით, მოულოდნელობის ან ფარულობის ხერხების გამოყენებით.'},
+ interdict:{ka:'აღკვეთა',en:'Interdict',g:['ef'],img:'interdict',stems:['აღკვეთ','interdict'],
+  def:'ტაქტიკური დავალება, როდესაც მეთაური არ დაუშვებს, ჩაშლის ან შეაყოვნებს მოწინააღმდეგის მიერ რაიონის ან მარშრუტის გამოყენებას.'},
+ penetrate:{ka:'შეღწევა',en:'Penetrate',g:['fm'],img:'penetrate',stems:['შეღწევ','penetrat'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც შემტევი ძალა ცდილობს, გაარღვიოს მოწინააღმდეგის თავდაცვა ვიწრო ფრონტზე, რათა დაშალოს მისი თავდაცვითი სისტემა.'},
+ contain:{ka:'შებოჭვა (შეკავება)',en:'Contain',g:['ef'],img:'contain',stems:['შებოჭვ','შეკავ','contain'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს მოწინააღმდეგის ძალების შეჩერებას, შეფერხებას, ალყის შემორტყმას ან მოწინააღმდეგის იძულებას, რომ საკუთარი ძალების მოქმედება კონცენტრირებულად მიმართოს მოცემულ ფრონტზე და ვერ შეძლოს ძალების რომელიმე ნაწილის გაყვანა ბრძოლიდან მისი სხვაგან გამოყენების მიზნით.'},
+ control:{ka:'კონტროლი',en:'Control',g:['fa'],img:'control',stems:['კონტროლ','control'],
+  def:'ტაქტიკური დავალება, რომელიც მეთაურისგან მოითხოვს ფიზიკური ზეგავლენის შენარჩუნებას კონკრეტულ რაიონში მოწინააღმდეგის მიერ მისი გამოყენების არდაშვების მიზნით.'},
+ catk:{ka:'კონტრშეტევა',en:'Counterattack',g:['fm'],img:'catk',stems:['კონტრშეტევ','კონტრატაკ','counterattack','counter attack','catk'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს მოწინააღმდეგის შემტევი ძალებისთვის თავდაცვაში მყოფი მთლიანი ძალის ან მისი ნაწილის შეტევას სპეციფიკური მიზნებით, როგორებიცაა: დაკარგული ადგილმდებარეობის უკან დაბრუნება ან მოწინააღმდეგის მეწინავე ქვედანაყოფებისთვის გზის მოჭრა ან განადგურება, რათა მოწინააღმდეგეს არ მიეცეს შეტევის მიზნის მიღწევის საშუალება.'},
+ defeat:{ka:'დამარცხება',en:'Defeat',g:['ef'],img:'defeat',stems:['დამარცხ','defeat'],
+  def:'ტაქტიკური დავალება, რომელიც სრულდება მაშინ, როდესაც მოწინააღმდეგეს დროებით ან სამუდამოდ დაკარგული აქვს ბრძოლის ფიზიკური უნარი ან ნებისყოფა. დამარცხებული ძალის მეთაურს არ აქვს უნარი ან ნებისყოფა, გააგრძელოს დასახული სამოქმედო გეგმა, ემორჩილება გამარჯვებული ძალების მეთაურის ნებას და აღარ შეუძლია, მნიშვნელოვნად შეუშალოს ხელი მათ მოქმედებებს.'},
+ delay:{ka:'შეყოვნება (დაყოვნება)',en:'Delay',g:['rt'],img:'delay',stems:['შეყოვნ','დაყოვნ','შეფერხ','delay'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს უკან დახევას მაშინ, როდესაც მოწინააღმდეგის ზეწოლით ქვედანაყოფი ცდილობს, დათმოს სივრცე და მოიგოს დრო, შეანელოს მოწინააღმდეგის ოპერაციის იმპულსი და მიაყენოს მას მაქსიმალური ზიანი, ძირითადად, გადამწყვეტი შეტაკების გარეშე.'},
+ demo:{ka:'დემონსტრირება',en:'Demonstration',g:['dc'],img:'demo',stems:['დემონსტრ','demonstration'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს სამხედრო შეცდომაში შეყვანის ოპერაციის დროს ძალის ჩვენებას რაიონში, სადაც ამ მოქმედებით სხვა ტაქტიკური დავალების შესრულება არ არის ჩაფიქრებული. სრულდება მოწინააღმდეგის შეცდომაში შეყვანის მიზნით. ჰგავს ცრუ შეტევას, მაგრამ არ გულისხმობს მოწინააღმდეგესთან შეხებას.'},
+ destroy:{ka:'განადგურება',en:'Destroy',g:['ef'],img:'destroy',stems:['განადგურ','მოსპობ','destroy'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც მოწინააღმდეგის ძალა ხდება ბრძოლისთვის არაეფექტური მანამ, სანამ არ აღიდგენს ძალებს.'},
+ disengage:{ka:'კონტაქტიდან გასვლა',en:'Disengage',g:['fa'],img:'disengage',stems:['კონტაქტიდან გასვლ','კონტაქტის შეწყვეტ','disengage'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც მეთაური საკუთარ ქვედანაყოფს უბრძანებს მოწინააღმდეგესთან უშუალო შეხების შეწყვეტას, რათა საშუალება მიეცეს, გადავიდეს სხვა ამოცანაზე ან თავიდან აიცილოს გადამწყვეტი შეტაკება.'},
+ disrupt:{ka:'დაშლა',en:'Disrupt',g:['ef'],img:'disrupt',ob:'disrupt_ob',stems:['დაშლ','დეზორგანიზ','ჩაშლ','disrupt'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროს მეთაური ინტეგრირებულად იყენებს პირდაპირ და არაპირდაპირ ცეცხლს, ადგილმდებარეობასა და დაბრკოლებებს მოწინააღმდეგის საბრძოლო წყობის დაშლის, ტემპის დაცემის, ოპერაციის გრაფიკის დარღვევის ან იმ მიზნით, რომ აიძულოს მოწინააღმდეგის ძალები, ნაადრევად ჩაებან ბრძოლაში ან შეუტიონ ნაწილ-ნაწილ.',
+  obdef:'საინჟინრო დაბრკოლების ეფექტი, რომლის საშუალებითაც ცეცხლისა და დაბრკოლების ძალისხმევა კონცენტრირებულია მოწინააღმდეგის საბრძოლო წყობისა და ტემპის არევ-დარევაზე, გრაფიკის ჩაშლაზე, მის მიერ დაბრკოლების გარღვევის საშუალებების ნაადრევად გამოყენებასა და ნაწილ-ნაწილ შეტევაზე.'},
+ envelop:{ka:'გარშემორტყმა',en:'Envelopment',g:['fm'],img:'envelop',stems:['გარშემორტყმ','ალყ','envelop'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც შემტევი ძალა ცდილობს, ობიექტების ხელში ჩაგდების გზით თავი აარიდოს მოწინააღმდეგის ძირითად თავდაცვით პოზიციებს მოწინააღმდეგის ზურგში, რათა ის გაანადგუროს თავისივე პოზიციებზე.'},
+ exploit:{ka:'მოპოვებული წარმატების განვითარება (ექსპლუატაცია)',en:'Exploitation',g:['fm'],img:'exploit',stems:['წარმატების განვითარ','ექსპლუატაც','exploit'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს სამხედრო ოპერაციებში მოპოვებული წარმატების სრულ გამოყენებას და დროებით მიღწეული შედეგების მუდმივად გადაქცევას. მისი დანიშნულებაა მოწინააღმდეგის ძალების დეზორგანიზება მათი განლაგების სიღრმეში.'},
+ follow_assume:{ka:'მიყოლა და პასუხისმგებლობის აღება',en:'Follow and assume',g:['fa'],img:'follow_assume',stems:['მიყოლა და პასუხისმგ','პასუხისმგებლობის აღებ','follow and assume'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც ბრძოლაში ჩართული მეორე ქვედანაყოფი მიჰყვება თავდასხმითი ოპერაციის ჩამტარებელ ქვედანაყოფს და მზადაა, განაგრძოს ამოცანის შესრულება, თუ მეწინავე ქვედანაყოფი ფიქსირებულია, მოქანცულია ან სხვა მიზეზით ვეღარ აგრძელებს ოპერაციას.'},
+ follow_support:{ka:'მიყოლა და მხარდაჭერა',en:'Follow and support',g:['fa'],img:'follow_support',stems:['მიყოლა და მხარდაჭ','follow and support'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც ბრძოლაში ჩართული ძალა მიჰყვება და მხარს უჭერს თავდასხმითი ოპერაციის ჩამტარებელ მეწინავე ქვედანაყოფს.'},
+ isolate:{ka:'იზოლირება',en:'Isolate',g:['ef'],img:'isolate',stems:['იზოლ','isolat'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც ქვედანაყოფმა უნდა მოწყვიტოს მოწინააღმდეგე (ფიზიკურად და ფსიქოლოგიურად) თავისი მხარდაჭერის წყაროებს, აღუკვეთოს გადაადგილების თავისუფლება და არ მისცეს მოწინააღმდეგის ქვედანაყოფებს სხვა ქვედანაყოფებთან კონტაქტის საშუალება.'},
+ neutralize:{ka:'განეიტრალება',en:'Neutralize',g:['ef'],img:'neutralize',stems:['განეიტრალ','neutraliz'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც მოწინააღმდეგის პირადი შემადგენლობა ან ტექნიკა იმდენად უნდა დაუძლურდეს ან განადგურდეს, რომ ხელი ვერ შეუშალოს კონკრეტული ოპერაციის ჩატარებას.'},
+ occupy:{ka:'დაკავება',en:'Occupy',g:['fa'],img:'occupy',stems:['დაკავ','occupy'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც ძალები ისე შედიან რაიონში, რომ შეძლონ მთელი რაიონის გაკონტროლება. ძალები გადაადგილდებიან და რაიონს იკავებენ მოწინააღმდეგის წინააღმდეგობის გარეშე.'},
+ pol_fwd:{ka:'ხაზების გადაკვეთა / საბრძოლო პოზიციებში გავლა (წინ)',en:'Passage of lines (forward)',g:['mv'],img:'pol_fwd',stems:['ხაზების გადაკვეთა წინ','პოზიციებში გავლა წინ','გადაკვეთა წინ','გავლა წინ','forward passage'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს ერთი ქვედანაყოფის გადაადგილებას მეორე ქვედანაყოფის პოზიციებში გავლით მოწინააღმდეგესთან კონტაქტში შესვლის მიზნით.'},
+ pol_rear:{ka:'ხაზების გადაკვეთა / საბრძოლო პოზიციებში გავლა (უკან)',en:'Passage of lines (rearward)',g:['mv'],img:'pol_rear',stems:['ხაზების გადაკვეთა უკან','პოზიციებში გავლა უკან','გადაკვეთა უკან','გავლა უკან','rearward passage'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს ერთი ქვედანაყოფის გადაადგილებას მეორე ქვედანაყოფის პოზიციებში გავლით მოწინააღმდეგესთან კონტაქტიდან გამოსვლის მიზნით.'},
+ relief:{ka:'ადგილზე ჩანაცვლება',en:'Relief in place',g:['mv'],img:'relief',stems:['ადგილზე ჩანაცვლ','ჩანაცვლ','relief in place'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც ზემდგომი მეთაურის ბრძანებით რაიონში შემომსვლელი ქვედანაყოფი ჩაანაცვლებს მთლიან ქვედანაყოფს ან მის ნაწილს. ჩანაცვლებული ელემენტების ამოცანისა და საბრძოლო მოქმედებების ზონის პასუხისმგებლობები გადაეცემა შემომსვლელ ქვედანაყოფს, რომელიც განაგრძობს ოპერაციებს ბრძანების თანახმად.'},
+ retain:{ka:'შენარჩუნება (ტერიტორიის დაცვა)',en:'Retain',g:['fa'],img:'retain',stems:['შენარჩუნ','ტერიტორიის დაცვ','retain'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც მეთაური არ დაუშვებს საკუთარი ძალების მიერ უკვე კონტროლირებადი ადგილმდებარეობის თავისებურების (ნიშნის) მოწინააღმდეგის მიერ დაკავებას ან გამოყენებას.'},
+ retire:{ka:'გაცლა (ძალების გამოყვანა)',en:'Retirement',g:['rt'],img:'retire',stems:['გაცლ','ძალების გამოყვან','retire'],
+  def:'ოპერაცია, რომლის შესრულების დროსაც მოწინააღმდეგესთან კონტაქტში არმყოფი ძალა გაეცლება მოწინააღმდეგეს.'},
+ secure:{ka:'უსაფრთხოების უზრუნველყოფა (გამაგრება)',en:'Secure',g:['fa'],img:'secure',stems:['უსაფრთხოების უზრუნველყ','secure'],
+  def:'ტაქტიკური დავალება, რომლის შესრულების დროსაც დაუშვებელია ქვედანაყოფების, ნაგებობების ან გეოგრაფიული ადგილმდებარეობის განადგურება მოწინააღმდეგის მოქმედების შედეგად.'},
+ screen:{ka:'მეთვალყურეობა (თვალთვალი)',en:'Screen',g:['sec'],img:'screen',stems:['მეთვალყურ','თვალთვალ','ეკრანირ','screen'],
+  def:'ტაქტიკური დავალება, რომელიც ძირითადად უზრუნველყოფს დასაცავი ქვედანაყოფის ადრეულ გაფრთხილებას.'},
+ guard:{ka:'დაცვა',en:'Guard',g:['sec'],img:'guard',stems:['დაცვ','guard'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს ძირითადი ძალის დაცვას ბრძოლით დროის მოგების გზით, ამავდროულად თვალთვალსა და ინფორმაციის მოხსენებას, ძირითად ძალაზე მოწინააღმდეგის სახმელეთო თვალთვალისა და პირდაპირი ცეცხლის არდაშვებას რეკოგნოსცირებით, შეტევით, თავდაცვითა და შეყოვნებით. დაცვის ძალა მოქმედებს ძირითადი ძალის არაპირდაპირი ცეცხლის საშუალებების მოქმედების რადიუსში.'},
+ cover:{ka:'დაფარვა',en:'Cover',g:['sec'],img:'cover',stems:['დაფარვ','გადაფარ','covering force','cover'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს ძირითადი ძალის დაცვას ბრძოლითა და დროის მოგებით, ამავე დროს დაკვირვებითა და ინფორმაციის მოხსენებით, რისი მიზანიცაა ძირითადი ძალისთვის მოწინააღმდეგის სახმელეთო დაკვირვების საშუალებებისა და პირდაპირი ცეცხლის ეფექტების თავიდან აცილება. მეთვალყურეობისა და დაცვის ძალისაგან განსხვავებით, დამფარავ ძალას ძირითადი ძალისგან დამოუკიდებლად მოქმედება შეუძლია.'},
+ seize:{ka:'ხელში ჩაგდება (დაპყრობა)',en:'Seize',g:['fa'],img:'seize',stems:['ხელში ჩაგდ','ხელში ჩადგ','დაპყრ','დაუფლ','seize'],
+  def:'ტაქტიკური დავალება, რომელიც გულისხმობს მოწინააღმდეგეზე ბევრად აღმატებული ძალის გამოყენებით დადგენილი რაიონის ხელში ჩაგდებას.'},
+ suppress:{ka:'ჩახშობა',en:'Suppress',g:['ef'],img:'suppress',stems:['ჩახშობ','suppress'],
+  def:'ტაქტიკური დავალება, რომლის შედეგია ქვედანაყოფის ან შეიარაღების სისტემის შესაძლებლობების დროებითი დასუსტება და ამოცანის შესრულების ხარისხის გაუარესება.'},
+ turn:{ka:'მობრუნება',en:'Turn',g:['ef'],img:'turn',ob:'turn_ob',stems:['მობრუნ','მოტრიალ','turn'],
+  def:'ტაქტიკური დავალება, რომელიც მოიცავს მოწინააღმდეგის იძულებას, შეცვალოს მიახლოების მარშრუტი ან გადაადგილების დერეფანი.',
+  obdef:'ტაქტიკური დაბრკოლების ეფექტი, რომელშიც გაერთიანებულია საცეცხლე ზემოქმედების დაგეგმვა და დაბრკოლების ძალისხმევა, რომლის მიზანია, მოწინააღმდეგე აიძულოს, შეცვალოს მიახლოების მარშრუტი მომიჯნავე მარშრუტით ან შევიდეს ბრძოლაში ჩაბმის რაიონში.'},
+ withdraw:{ka:'ძალების გაყვანა',en:'Withdraw',g:['rt'],img:'retire',v:1,note:'სლაიდზე შეცდომით „გაცლის“ გრაფიკაა. ფორმა იგივეა (მობრუნებული ისარი), განსხვავდება ასო (ADP 1-02: W / R) — ზუსტი ქართული ასო მოსაძიებელია',stems:['ძალების გაყვან','გაყვან','withdraw'],
+  def:'ტაქტიკური დავალება, როდესაც მოწინააღმდეგესთან კონტაქტში მყოფი ძალა წყვეტს კონტაქტს და შორდება მოწინააღმდეგეს.'},
+ wup:{ka:'ძალების გაყვანა ზეწოლის ქვეშ',en:'Withdraw under pressure',g:['rt'],img:'wup',stems:['ძალების გაყვანა ზეწოლ','გაყვანა ზეწოლ','ზეწოლის ქვეშ','under pressure'],
+  def:'ტაქტიკური დავალება, როდესაც კონტაქტში მყოფი ძალა გამოდის ბრძოლიდან ზეწოლის ქვეშ.'},
+ canalize:{ka:'კანალიზება',en:'Canalize',g:['ef'],src:'app6',stems:['კანალიზ','არხში მოქცევ','canalize','canalise'],
+  def:'მოწინააღმდეგის მოძრაობის შეზღუდვა ვიწრო ზოლით — დაბრკოლებებით, ცეცხლით ან მანევრით (ADP 1-02, პერიფრაზი).'}
+};
+/* ორაზროვანი ზოგადი სიტყვები → დაზუსტების მოთხოვნა */
+const AMBIG=[
+ {stem:'ხაზების გადაკვეთ',keys:['pol_fwd','pol_rear']},
+ {stem:'პოზიციებში გავლ',keys:['pol_fwd','pol_rear']},
+ {stem:'მიყოლ',keys:['follow_assume','follow_support']}
+];
+
+/* ---------- ნიშნების წესები (სერჟანტთა კურსის სასწავლო მასალა) ---------- */
+const RULES={
+ def:'ტაქტიკური ნიშნები წარმოადგენს სპეციალურ აღნიშვნებს, რომლებიც გამოიყენება ქვედანაყოფების, ნაგებობების, შეიარაღებისა და ტექნიკის, საბრძოლო მოქმედებების გეგმაზე, რუკაზე, სქემაზე ან ეკრანზე გამოსახვისათვის.',
+ lit:'სამხედრო განმარტებითი ლექსიკონი და გრაფიკული ნიშნების სახელმძღვანელო (სს 1-01); FM ტაქტიკური ნიშნების სახელმძღვანელო; NATO-ს გრაფიკული ნიშნები.',
+ kinds:[
+  ['ძირითადი ნიშნები',['ქვედანაყოფისა და შტაბის ნიშნები','ხაზებისა და რაიონების ნიშნები','ნაგებობების ნიშნები']],
+  ['სპეციალური ნიშნები',['შეიარაღებისა და ტექნიკის ნიშნები','პოზიციის, სანგრის ნიშნები','დაბრკოლებების ნიშნები','გზებისა და ხიდების აღმნიშვნელი ნიშნები','სპეციალური ნაგებობები და სხვა ნიშნები']],
+  ['გვერდითი მონაცემები',['ვინაობა','ქვედანაყოფის / ნაგებობის დასახელება','შეიარაღების / აღჭურვილობის ტიპი და კალიბრი','გადაადგილების შესაძლებლობა','მხარდაჭერის მდგომარეობა','თარიღი / საათი','დამატებითი მონაცემები']],
+  ['დამატებითი ნიშნები',['სახეობის / გვარეობის და სამსახურის ნიშნები','საფეხურის (ეშელონის) ნიშნები','ამოცანის / ვითარების განმსაზღვრელი ნიშნები']]
+ ],
+ colors:[
+  ['#1D3FBF','ლურჯი','საკუთარი ქვედანაყოფი'],
+  ['#D0141E','წითელი','მოწინააღმდეგის ქვედანაყოფი'],
+  ['#E6C800','ყვითელი','საკუთარი და მოწინააღმდეგის მასობრივი განადგურების იარაღი (მ.გ.ი.), ასევე დაუდგენელი / უცნობი ძალები'],
+  ['#1E9A3A','მწვანე','საკუთარი და მოწინააღმდეგის წინაღობები (ნაღმები)']
+ ],
+ mono:'ერთი ფერის გამოყენებისას ქვედანაყოფის ვინაობა განისაზღვრება ჩარჩოს ფორმით: საკუთარი — მართკუთხედი; მოწინააღმდეგე — მართკუთხედი წარწერით „მოწ.“, ორმაგი მართკუთხედი ან რომბი. ეს განსაკუთრებით ხელსაყრელია გაფერადების საშუალებების არარსებობისას.',
+ lines:[['უწყვეტი ხაზი','ამჟამინდელი ან ფაქტობრივი ადგილმდებარეობა'],['წყვეტილი ხაზი','მომავალი ან გეგმის შესაბამისი ადგილმდებარეობა']],
+ sizes:[['მართკუთხა','სიმაღლე 1 ერთეული, სიგანე 1.5 ერთეული'],['კვადრატული','1 × 1 ერთეული'],['რომბი','გვერდი 1 ერთეული'],['სამკუთხა','გვერდი 1 ერთეული'],['ხუთკუთხა (პუნქტი)','კვადრატი 1 ერთეული + სამკუთხედი 0.5 ერთეული'],['წრიული','დიამეტრი 1 ერთეული']],
+ place:['ნიშნის მდებარეობას განსაზღვრავს სიმბოლოს ფუძის ცენტრი.','თუ შეუძლებელია ნიშნის შესაბამის ადგილზე აღნიშვნა, იგი დაიტანება სხვა ადგილას და ნამდვილი მდებარეობის მისათითებლად ძირითად ნიშანს მიებმება მიმანიშნებელი ხაზი, რომლის ბოლოც მიუთითებს მის ზუსტ ადგილს.','ხაზები და რაიონები იხაზება ნამდვილი ადგილმდებარეობის მიხედვით და მასშტაბით.'],
+ fields:[
+  [1,'ქვედანაყოფის ტიპი','გრაფიკული / ტექსტური'],
+  [2,'ქვედანაყოფის სიდიდე (ეშელონი)','გრაფიკული / ტექსტური'],
+  [3,'ქვედანაყოფის ნუმერაცია','ტექსტური'],
+  [4,'სამეთაურო იერარქია (ზემდგომი)','ტექსტური'],
+  [5,'აღჭურვილობის ტიპი / დამატებითი ინფორმაცია (ქსმ / ბტრ)','ტექსტური'],
+  [6,'თარიღი / დრო','ტექსტური'],
+  [7,'გაძლიერებული (+) / გამოყოფა (−)','ტექსტური'],
+  [8,'გადაადგილების მიმართულება','გრაფიკული']
+ ]
+};

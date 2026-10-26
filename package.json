@@ -1,7 +1,8 @@
 {
   "name": "tactical-symbols",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "author": "დავით თედიაშვილი",
   "description": "ტაქტიკური ნიშნების გენერატორი — APP-6 / ADP 1-02 სასწავლო აპლიკაცია",
   "scripts": {
     "serve": "npx http-server www -p 8080 -c-1",

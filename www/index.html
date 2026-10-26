@@ -93,17 +93,45 @@ section[hidden]{display:none}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px}
 footer .wrap{padding-block:18px 28px;display:grid;gap:6px}
 footer p{margin:0;max-width:80ch}
+.tabs{flex-wrap:wrap}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:10px;font-size:14px}
+.opts label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+details.fields{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-top:10px}
+details.fields summary{cursor:pointer;font-weight:600;font-size:14px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 12px;margin-top:10px}
+.fgrid label{display:grid;gap:3px;font-size:12.5px;color:var(--muted)}
+.fgrid input,.fgrid select{font:14px var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+.board img{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;background:#fff;border-radius:3px}
+.cat img{width:100%;height:84px;object-fit:contain;background:#fff;border-radius:3px;display:block}
+.catgrid.wide{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.src{font:500 11px var(--f-mono);color:var(--muted)}
+.rules{display:grid;gap:26px}
+.rules h3{font-family:var(--f-display);font-size:20px;margin:0 0 10px}
+.rules p{margin:0 0 8px;max-width:72ch}
+.kinds{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.kind{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.kind b{display:block;margin-bottom:6px}
+.kind ul{margin:0;padding-left:18px;font-size:14px}
+.swatches{display:grid;gap:8px}
+.sw{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.sw svg{width:72px;height:auto}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:start}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.mini .board{padding:8px}
+.mini .cap{font-size:12px}
+.lvlrow td svg{width:46px;height:auto;display:block}
 </style>
 </head>
 <body>
 <header><div class="wrap">
   <div>
-    <span class="eyebrow">APP-6 · MIL-STD-2525 · ADP 1-02 · FM 3-90</span><br>
+    <span class="eyebrow">APP-6 · ADP 1-02 · სს 1-01 · სერჟანტთა კურსი</span><br>
     <h1>ტაქტიკური ნიშნების გენერატორი</h1>
   </div>
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-gen" aria-selected="true" data-t="gen">გენერატორი</button>
     <button role="tab" id="tab-cat" aria-selected="false" data-t="cat">კატალოგი</button>
+    <button role="tab" id="tab-rules" aria-selected="false" data-t="rules">წესები</button>
     <button role="tab" id="tab-quiz" aria-selected="false" data-t="quiz">ვარჯიში</button>
   </div>
 </div></header>
@@ -113,16 +141,34 @@ footer p{margin:0;max-width:80ch}
 <section id="sec-gen">
   <p class="label">წერილობითი განმარტება</p>
   <div class="input-row">
-    <textarea id="q" placeholder="მაგ.: მოწინააღმდეგის მექანიზებული ქვეითი ბატალიონი">მეგობრული მექანიზებული ქვეითი ასეული</textarea>
+    <textarea id="q" placeholder="მაგ.: მოწინააღმდეგის მექანიზებული ქვეითი ბატალიონი">საკუთარი მექანიზებული ქვეითი ოცეული</textarea>
     <button class="btn" id="go">გამოსახვა</button>
   </div>
-  <p class="hint">ჩაწერეთ: <b>აფილაცია</b> + <b>დარგი</b> + <b>ეშელონი</b> (+ შტაბი / სადესანტო), ან <b>ტაქტიკური ამოცანა</b>. შეიძლება ორივე ერთად. მიიღება ქართული და ინგლისური ტერმინები. Enter — გამოსახვა.</p>
-  <div class="chips" id="examples" style="margin-top:10px"></div>
+  <p class="hint">ქვედანაყოფი: <b>ვინაობა</b> + <b>გვარეობა</b> + <b>ეშელონი</b> (+ შტაბი, სადესანტო, დაგეგმილი, მომარაგების კლასი). ასევე: <b>ტაქტიკური დავალება</b>, <b>პუნქტი</b>, <b>შეიარაღება</b> (მსუბუქი / საშუალო / მძიმე), <b>ტექნიკა</b>, <b>ფორტიფიკაცია</b>, <b>დაბრკოლება</b>, <b>ნაღმი</b>. Enter — გამოსახვა.</p>
+  <div class="opts">
+    <label><input type="checkbox" id="mono"> ერთფეროვანი სქემა (ლურჯი / წითელი ხაზით)</label>
+    <label><input type="checkbox" id="planned"> დაგეგმილი (წყვეტილი ხაზი)</label>
+  </div>
+  <details class="fields" id="fieldsbox">
+    <summary>გვერდითი მონაცემები (ველები 3–7)</summary>
+    <div class="fgrid">
+      <label>3 — ნუმერაცია<input id="f-n" placeholder="მაგ.: 3"></label>
+      <label>4 — ზემდგომი ქვედანაყოფი<input id="f-hi" placeholder="მაგ.: 2"></label>
+      <label>5 — აღჭურვილობა / ტიპი<input id="f-eq" placeholder="მაგ.: ქსმ, ბტრ"></label>
+      <label>6 — თარიღი / დრო<input id="f-dt" placeholder="მაგ.: 140530იან2008"></label>
+      <label>7 — გაძლიერება / გამოყოფა<select id="f-rf"><option value="">—</option><option value="(+)">(+) გაძლიერებული</option><option value="(−)">(−) გამოყოფით</option><option value="(±)">(±) ორივე</option></select></label>
+    </div>
+  </details>
+  <div class="chips" id="examples" style="margin-top:12px"></div>
   <div id="out" style="margin-top:22px"></div>
 </section>
 
 <section id="sec-cat" hidden>
   <div id="catalog"></div>
+</section>
+
+<section id="sec-rules" hidden>
+  <div id="rules" class="rules"></div>
 </section>
 
 <section id="sec-quiz" hidden>
@@ -132,8 +178,8 @@ footer p{margin:0;max-width:80ch}
       <div class="actions" style="justify-content:space-between;align-items:center">
         <h2>რას აღნიშნავს ეს ნიშანი?</h2><span class="score" id="qscore">0 / 0</span>
       </div>
-      <p class="def empty">ჩაწერეთ სრული განმარტება: აფილაცია, დარგი და ეშელონი — ან ამოცანის დასახელება.</p>
-      <textarea id="qa" placeholder="მაგ.: მოწინააღმდეგის სადაზვერვო ოცეული"></textarea>
+      <p class="def empty" id="qhint">ჩაწერეთ სრული განმარტება.</p>
+      <textarea id="qa" placeholder="ჩაწერეთ განმარტება"></textarea>
       <div class="actions"><button class="btn" id="qcheck">შემოწმება</button><button class="btn ghost" id="qnext">შემდეგი ნიშანი</button></div>
       <div id="qfb"></div>
     </div>
@@ -143,10 +189,11 @@ footer p{margin:0;max-width:80ch}
 </div></main>
 
 <footer><div class="wrap">
-  <p><b>საფუძველი:</b> NATO APP-6 (Joint Military Symbology); MIL-STD-2525; აშშ-ის ADP 1-02 (Terms and Military Symbols); FM 3-90 (Tactics) — ამოცანების განმარტებები პერიფრაზირებულია.</p>
-  <p><b>დაშვება:</b> საქართველოს თავდაცვის ძალები იყენებს NATO-თავსებად (APP-6) სიმბოლიკას; ქართული ტერმინები აქ გამოყენებულია სამუშაო ვარიანტად და შეიძლება განსხვავდებოდეს ეროვნული სახელმძღვანელოს ზუსტი ფორმულირებისგან.</p>
-  <p><b>შეზღუდვა:</b> გრაფიკები სქემატურია, სასწავლო დანიშნულებით. ნიშნით „გადაამოწმეთ“ აღნიშნული ამოცანების გრაფიკის ზუსტი ფორმა შეადარეთ ADP 1-02-ის მოქმედ რედაქციას.</p>
+  <p><b>საფუძველი:</b> საწყისი სამეთაურო მომზადების სერჟანტთა საკანდიდატო კურსის სასწავლო მასალა (ქართული ტერმინები, განმარტებები, დავალებების გრაფიკა). ლიტერატურა: სამხედრო განმარტებითი ლექსიკონი და გრაფიკული ნიშნების სახელმძღვანელო (სს 1-01); NATO APP-6; ADP 1-02; FM 3-90.</p>
+  <p><b>ავტორი:</b> უფროსი სერჟანტი დავით თედიაშვილი.</p>
+  <p><b>შეზღუდვა:</b> სასწავლო დამხმარე საშუალებაა და ოფიციალურ სახელმძღვანელოს არ ცვლის. ნიშნით „გადაამოწმეთ“ აღნიშნული ელემენტები შეადარეთ მოქმედ სახელმძღვანელოს.</p>
 </div></footer>
+
 <script src="symbols-data.js"></script>
 <script src="app.js"></script>
 <script>
